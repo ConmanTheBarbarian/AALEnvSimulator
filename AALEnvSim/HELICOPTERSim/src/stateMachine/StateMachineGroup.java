@@ -51,6 +51,7 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 	private HashMap<String,StateMachineOrGroup> s2smosmg=new HashMap<String,StateMachineOrGroup>();
 	private StateMachineGroup parent;
 	private HashMap<String,Variable<?>> s2v=new HashMap<String,Variable<?>>();
+	private HashMap<String,StateMachine> s2sm=new HashMap<String,StateMachine>();
 	
 	public final synchronized Variable<?> getOrCreateVariable(final Variable.Type type,final String name) {
 		Variable<?> v=Variable.getVariable(type,name,this);
@@ -61,8 +62,12 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 
 	
 	public final synchronized StateMachine getOrCreateStateMachine(final String name, long seed) {
-		StateMachine sm=StateMachine.getStateMachine(name,this,seed);
-		this.add(sm);
+		StateMachine sm=this.s2sm.get(name);
+		if (sm==null) {
+			sm=StateMachine.getStateMachine(name,this,seed);
+			this.add(sm);
+			s2sm.put(name, sm);
+		}
 		return sm;
 	}
 	StateMachineGroup(String name, StateMachineSystem sms,StateMachineGroup smg) {

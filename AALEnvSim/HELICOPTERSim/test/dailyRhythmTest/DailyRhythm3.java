@@ -443,9 +443,10 @@ public class DailyRhythm3 {
 			}
 			// now we turn to the interesting cases
 			
-//			if (sleepStateMachine.isTracing()) {
-//				System.out.println("Stay in sleep state :"+stayInSleepModeProbability+" based on fatigue modifier = "+fatigueModifier+" max probability="+maxProbability+" and duration="+duration);
-//			}
+			double equal=1.0/result.size();
+			for (Edge edge:edgeSet) {
+				result.put(edge,equal);
+			}
 			
 			return result;
 		}
