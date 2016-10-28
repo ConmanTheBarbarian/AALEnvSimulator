@@ -21,8 +21,15 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 			}
 			this.noisms=smg;
 		}
-		public final boolean isStateMachine() {
-			return this.noisms instanceof StateMachine;
+		@Override
+		public boolean evaluate() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		@Override
+		public boolean evaluate(StateMachine sm) {
+			throw new IllegalArgumentException("State machine groups do not call evaluate with StateMachine as an argument");
+
 		}
 		public final StateMachine getStateMachine() {
 			if (!this.isStateMachine()) {
@@ -36,46 +43,23 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 			}
 			return (StateMachine)this.noisms;
 		}
-		@Override
-		public boolean evaluate(StateMachine sm) {
-			throw new IllegalArgumentException("State machine groups do not call evaluate with StateMachine as an argument");
-
-		}
-		@Override
-		public boolean evaluate() {
-			// TODO Auto-generated method stub
-			return false;
+		public final boolean isStateMachine() {
+			return this.noisms instanceof StateMachine;
 		}
 	};
 	
-	private HashMap<String,StateMachineOrGroup> s2smosmg=new HashMap<String,StateMachineOrGroup>();
 	private StateMachineGroup parent;
-	private HashMap<String,Variable<?>> s2v=new HashMap<String,Variable<?>>();
 	private HashMap<String,StateMachine> s2sm=new HashMap<String,StateMachine>();
+	private HashMap<String,StateMachineOrGroup> s2smosmg=new HashMap<String,StateMachineOrGroup>();
+	private HashMap<String,Variable<?>> s2v=new HashMap<String,Variable<?>>();
 	
-	public final synchronized Variable<?> getOrCreateVariable(final Variable.Type type,final String name) {
-		Variable<?> v=Variable.getVariable(type,name,this);
-		this.addVariable(v);
-		return v;
-	}
-	
-
-	
-	public final synchronized StateMachine getOrCreateStateMachine(final String name, long seed) {
-		StateMachine sm=this.s2sm.get(name);
-		if (sm==null) {
-			sm=StateMachine.getStateMachine(name,this,seed);
-			this.add(sm);
-			s2sm.put(name, sm);
-		}
-		return sm;
-	}
 	StateMachineGroup(String name, StateMachineSystem sms,StateMachineGroup smg) {
 		super(name, sms);
 		this.parent=smg;
 	}
+	
 
-
+	
 	public final synchronized void add(final StateMachine sm) {
 		StateMachineOrGroup smog=s2smosmg.get(sm.getName());
 		if (smog!=null) {
@@ -83,14 +67,6 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		}
 		smog=new StateMachineOrGroup(sm);
 		s2smosmg.put(sm.getName(), smog);
-		
-	}
-	public final synchronized void remove(final StateMachine sm) {
-		StateMachineOrGroup smog=s2smosmg.get(sm.getName());
-		if (smog==null) {
-			throw new IllegalArgumentException("State machine "+sm.getName()+" is not a member of the state machine group "+this.getName());
-		}
-		s2smosmg.remove(sm.getName());
 		
 	}
 	public final synchronized void add(final StateMachineGroup smg) {
@@ -102,26 +78,11 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		s2smosmg.put(smg.getName(), smog);
 		
 	}
-	public final synchronized void remove(final StateMachineGroup smg) {
-		StateMachineOrGroup smog=s2smosmg.get(smg.getName());
-		if (smog==null) {
-			throw new IllegalArgumentException("State machine group "+smg.getName()+" is not a member of the state machine group "+this.getName());
-		}
-		s2smosmg.remove(smg.getName());
+
+
+	synchronized void addVariable(Variable<?> v) {
+		s2v.put(v.getName(),v);
 		
-	}
-	public final synchronized StateMachineOrGroup get(final String name) {
-		final StateMachineOrGroup smog=s2smosmg.get(name);
-		if (smog==null) {
-			throw new IllegalStateException("No such state machine or group exists: "+name);
-		}
-		return smog;
-	}
-	public final synchronized Collection<StateMachineOrGroup> getChildren() {
-		return this.s2smosmg.values();
-	}
-	public final synchronized boolean contains(final String name) {
-		return this.s2smosmg.containsKey(name);
 	}
 	public final synchronized boolean contains(StateMachine sm) {
 		final StateMachineOrGroup smog=s2smosmg.get(sm.getName());
@@ -132,12 +93,9 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		return smog!=null && !smog.isStateMachine();
 		
 	}
-
-	@Override
-	public boolean evaluate(StateMachine sm) {
-		throw new IllegalArgumentException("State machine groups do not call evaluate with StateMachine as an argument");
+	public final synchronized boolean contains(final String name) {
+		return this.s2smosmg.containsKey(name);
 	}
-
 	@Override
 	public boolean evaluate() {
 		for (StateMachineOrGroup smog:s2smosmg.values()) {
@@ -145,28 +103,19 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		}
 		return false;
 	}
-	
-	public final boolean isRoot() {
-		return this.parent==null;
-	}
-	
 	@Override
-	public synchronized String getQualifiedName() {
-		String prefix;
-		if (this.isRoot()) {
-			prefix="/";
-		} else {
-			prefix=this.parent.getName()+"/";
+	public boolean evaluate(StateMachine sm) {
+		throw new IllegalArgumentException("State machine groups do not call evaluate with StateMachine as an argument");
+	}
+	public final synchronized StateMachineOrGroup get(final String name) {
+		final StateMachineOrGroup smog=s2smosmg.get(name);
+		if (smog==null) {
+			throw new IllegalStateException("No such state machine or group exists: "+name);
 		}
-		return prefix+this.getName();
+		return smog;
 	}
-
-	synchronized void addVariable(Variable<?> v) {
-		s2v.put(v.getName(),v);
-		
-	}
-	public synchronized Variable<?> getVariable(String name) {
-		return s2v.get(name);
+	public final synchronized Collection<StateMachineOrGroup> getChildren() {
+		return this.s2smosmg.values();
 	}
 	/* (non-Javadoc)
 	 * @see stateMachine.NamedObjectInStateMachineSystem#getStateMachineBackEnd(stateMachine.NamedObjectInStateMachineSystem, java.lang.String[])
@@ -198,6 +147,60 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		}
 		
 		throw new IllegalArgumentException("Part "+noism.getQualifiedName()+"  has no child named"+head);
+	}
+
+	public final synchronized StateMachine getOrCreateStateMachine(final String name, long seed) {
+		StateMachine sm=this.s2sm.get(name);
+		if (sm==null) {
+			sm=StateMachine.getStateMachine(name,this,seed);
+			this.add(sm);
+			s2sm.put(name, sm);
+		}
+		return sm;
+	}
+
+	public final synchronized Variable<?> getOrCreateVariable(final Variable.Type type,final String name) {
+		Variable<?> v=this.getVariable(name);
+		if (v==null) {
+			v=Variable.getVariable(type,name,this);
+			this.addVariable(v);
+		}
+		return v;
+	}
+	
+	@Override
+	public synchronized String getQualifiedName() {
+		String prefix;
+		if (this.isRoot()) {
+			prefix="/";
+		} else {
+			prefix=this.parent.getName()+"/";
+		}
+		return prefix+this.getName();
+	}
+	
+	public synchronized Variable<?> getVariable(String name) {
+		return s2v.get(name);
+	}
+
+	public final boolean isRoot() {
+		return this.parent==null;
+	}
+	public final synchronized void remove(final StateMachine sm) {
+		StateMachineOrGroup smog=s2smosmg.get(sm.getName());
+		if (smog==null) {
+			throw new IllegalArgumentException("State machine "+sm.getName()+" is not a member of the state machine group "+this.getName());
+		}
+		s2smosmg.remove(sm.getName());
+		
+	}
+	public final synchronized void remove(final StateMachineGroup smg) {
+		StateMachineOrGroup smog=s2smosmg.get(smg.getName());
+		if (smog==null) {
+			throw new IllegalArgumentException("State machine group "+smg.getName()+" is not a member of the state machine group "+this.getName());
+		}
+		s2smosmg.remove(smg.getName());
+		
 	}
 	
 	

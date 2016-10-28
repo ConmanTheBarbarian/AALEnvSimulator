@@ -481,7 +481,9 @@ public class DailyRhythm3 {
 				Variable<Fatigue> fatigue=(Variable<Fatigue>) theSmg.getOrCreateVariable(Variable.Type.Object,"fatigue");
 				fatigue.add(new Fatigue(0.0));
 
+				@SuppressWarnings("unchecked")
 				Variable<Duration> dayCycleRemainDuration=(Variable<Duration>) theSmg.getOrCreateVariable(Variable.Type.Object, "dayCycleRemainDuration");
+				@SuppressWarnings("unchecked")
 				Variable<Duration> dayCycleTransferDuration=(Variable<Duration>) theSmg.getOrCreateVariable(Variable.Type.Object, "dayCycleTranserDuration");
 				for (int i=0; i<dayStateNames.length; ++i) {
 					dayCycleRemainDuration.add(Duration.parse("PT0h"));
