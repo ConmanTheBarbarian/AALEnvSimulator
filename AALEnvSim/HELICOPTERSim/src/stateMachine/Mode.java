@@ -57,8 +57,8 @@ public class Mode   implements Comparable<Mode> {
 		
 		@SuppressWarnings("unchecked")
 		synchronized boolean addAll(Collection<?> c) {
-			if (!c.parallelStream().allMatch(p->p instanceof String)) {
-				throw new IllegalArgumentException("Collection contains non-String objects");
+			if (!c.parallelStream().allMatch(p->p instanceof State)) {
+				throw new IllegalArgumentException("Collection contains non-State objects");
 			}
 			c.parallelStream().forEach(p->mode2enabler.put((State) p, false));
 			return modeSet.addAll((Collection<? extends State>) c);

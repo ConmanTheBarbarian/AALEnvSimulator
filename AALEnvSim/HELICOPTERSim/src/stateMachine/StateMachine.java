@@ -342,7 +342,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	}
 	public Type getType() {
 		Type type=Type.getType(this.getBaseName()+"_type");
-		type.addAll(this.stateMap.keySet());
+		type.addAll(this.stateMap.keySet().stream().map(s->this.getState(s)).collect(Collectors.toSet()));
 		return type;
 	}
 	public final synchronized ModeState getModeState() {
@@ -421,10 +421,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		Edge edge=new Edge(name,getStateMachineSystem(),this,startState,endState,transitionRule);
 		s2e.put(name, edge);
 		edgeSet.put(transitionRule,edge);
-		final State state=stateMap.get(edge.getStartState());
-		if (state==null) {
-			throw new IllegalStateException("State "+edge.getStartState()+" does not exist");
-		}
+
 		edge.getTransitionRule().getEvent().subscribe(this);
 		return edge;
 	}
