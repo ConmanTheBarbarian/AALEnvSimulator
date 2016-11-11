@@ -19,10 +19,12 @@ public abstract class StateEdgeProbabilitySpecification {
 	public StateEdgeProbabilitySpecification(final Type type, State state, final List<Edge> edgeList) {
 		this.contextTypeMap=type;
 		this.candidateEdgeSet.addAll(edgeList);
+		this.state=state;
 	}
 	public StateEdgeProbabilitySpecification(final Type type, State state, final Edge[] edgeArray) {
 		this.contextTypeMap=type;
 		this.candidateEdgeSet.addAll(Arrays.asList(edgeArray));
+		this.state=state;
 	}
 	public abstract HashMap<Edge,Double> evaluate();
 	/**

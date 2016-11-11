@@ -53,7 +53,7 @@ public class Path implements Iterable<Path.Part> {
 		// TODO Auto-generated constructor stub
 	}
 	public final synchronized Path addPart(final Part part) {
-		if ((part.equals(rootPart) && this.partVector.size()==0 ) || (!part.equals(rootPart) && this.partVector.size()>0)) {
+		if ((part.equals(rootPart) && this.partVector.size()==0 ) || (!part.equals(rootPart))) {
 			this.partVector.add(part);
 		} else { 
 			throw new IllegalArgumentException("Cannot add root part here");

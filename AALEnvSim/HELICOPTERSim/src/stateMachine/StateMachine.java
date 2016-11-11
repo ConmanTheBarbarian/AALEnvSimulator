@@ -49,8 +49,9 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	public final synchronized void addStateEdgeProbabilitySpecification(StateEdgeProbabilitySpecification seps) {
 		
 		HashSet<Edge> allOutgoingEdgeSet=new HashSet<Edge>();
-		for (HashMap<State,HashMap<TransitionRule,Edge>> s2es:edgeMap.values()) {
-			for (HashMap<TransitionRule,Edge> es:s2es.values()) {
+		final HashMap<State,HashMap<TransitionRule,Edge>> s2tr2e=this.edgeMap.get(seps.getState());
+		if (s2tr2e!=null) {
+			for (HashMap<TransitionRule,Edge> es:s2tr2e.values()) {
 				allOutgoingEdgeSet.addAll(es.values());
 			}
 		}

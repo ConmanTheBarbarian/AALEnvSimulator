@@ -85,7 +85,7 @@ public class DailyRhythm3 {
 				sleepStageDecreaseMap.put("stage1", -(1.0)/(8.5*60.0));				
 				sleepStageDecreaseMap.put("REM",    -(1.0)/(8.5*60.0));	
 				sleepStageDecreaseMap.put("awake",  defaultIncrease);
-				
+
 			}
 			this.value=Math.max(Base.epsilon, Math.min(1.0-Base.epsilon,value));
 		}
@@ -105,7 +105,7 @@ public class DailyRhythm3 {
 		}
 	}
 	//static final Fatigue fatigue=new Fatigue(1.0);
-	
+
 	static final private double bodyProcessFunctionProbability(double currentDuration,double typicalMaximumDuration,double rapidity) {
 		final double tmp=1.0-(typicalMaximumDuration-currentDuration)/typicalMaximumDuration;
 		//final double result=Math.min(1.0-Base.epsilon,Math.exp(-tmp/rapidity));
@@ -127,7 +127,7 @@ public class DailyRhythm3 {
 	protected Object sleepStageNames;
 	//static int adummy=0;
 	protected static String theSmgName="the state machine group";
-	
+
 
 	public static class Awaken extends Function {
 		private static  String sleepMode[]={"awake","stage1","stage2","stage3","stage4","REM"};
@@ -153,7 +153,7 @@ public class DailyRhythm3 {
 			return  result;
 		}
 	}
-	
+
 	public static class AppTracer extends Log.Tracer {
 
 		private StateMachineGroup smg;
@@ -167,9 +167,9 @@ public class DailyRhythm3 {
 			final Fatigue fatigue=((Fatigue)this.smg.getVariable("fatigue").elementAt(0));
 			this.getLog().addDoubleData(eventTypeName, t, "fatigue", fatigue.getValue());
 		}
-		
+
 	}
-	
+
 	public static class AlertnessConditionSpecification {
 		private double fatigueThreshold;
 		private int expectedCompareToResult;
@@ -208,7 +208,7 @@ public class DailyRhythm3 {
 			this.applicableModeSet.addAll(applicableModeCollection);
 			this.edgeProbability=edgeProbability;
 		}
-		
+
 		/**
 		 * @return the fatigueThreshold
 		 */
@@ -241,10 +241,10 @@ public class DailyRhythm3 {
 		public synchronized final EdgeProbability getEdgeProbability() {
 			return edgeProbability;
 		}
-		
-		
+
+
 	}
-	
+
 	static class DayCycleProbabilityFunction extends StateEdgeProbabilityFunctionSpecification.Function {
 
 		private double count=0.0;
@@ -288,9 +288,9 @@ public class DailyRhythm3 {
 			}
 			return result;
 		}
-		
-		
-		
+
+
+
 	}
 	static class SleepStateProbabilityFunction extends StateEdgeProbabilityFunctionSpecification.Function {
 		private static Awaken awaken=new Awaken();
@@ -298,8 +298,8 @@ public class DailyRhythm3 {
 		private static double typicalDurationOfPeriod[]={18.0,0.1,0.42,0.1,0.1,0.2};
 		private static double maximumProbabilityDuringSleepPeriodToStay[]={0.5,1.0,1.0,1.0,1.0,1.0};
 		private static double maximumProbabilityDuringAwakePeriodToStay[]={1.0,0.5,0.5,0.7,0.7,0.5};
-		
-		
+
+
 
 
 		private double count=0.0;
@@ -348,7 +348,7 @@ public class DailyRhythm3 {
 				fatigueModifier=1.0-fatigueModifier;
 			}
 
-			
+
 			StateMachine dailyCycleStateMachine=null;
 			StateMachine sleepStateMachine=null;
 			double maxProbability=1.0;
@@ -392,12 +392,12 @@ public class DailyRhythm3 {
 			if (sleepStateMachine.isTracing()) {
 				System.out.println("Stay in sleep state :"+stayInSleepModeProbability+" based on fatigue modifier = "+fatigueModifier+" max probability="+maxProbability+" and duration="+duration);
 			}
-			
+
 			return result;
 		}
-		
-		
-		
+
+
+
 	}
 
 	//TODO
@@ -407,8 +407,8 @@ public class DailyRhythm3 {
 		private static double typicalDurationOfPeriod[]={18.0,0.1,0.42,0.1,0.1,0.2};
 		private static double maximumProbabilityDuringSleepPeriodToStay[]={0.5,1.0,1.0,1.0,1.0,1.0};
 		private static double maximumProbabilityDuringAwakePeriodToStay[]={1.0,0.5,0.5,0.7,0.7,0.5};
-		
-		
+
+
 
 
 		private double count=0.0;
@@ -442,30 +442,30 @@ public class DailyRhythm3 {
 				return result;
 			}
 			// now we turn to the interesting cases
-			
+
 			double equal=1.0/result.size();
 			for (Edge edge:edgeSet) {
 				result.put(edge,equal);
 			}
-			
+
 			return result;
 		}
-		
-		
-		
+
+
+
 	}
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		//Mode.Type type=new Mode.Type("The type");
 		final String dayStateNames[]={"evening_night","night","night_morning","morning","morning_lunch","lunch","lunch_afternoon","afternoon","afternoon_evening","evening"};
-		
+
 		//typeSet.add(type);
-		
+
 		//Mode.Type sleepType=new Mode.Type("sleepType");
 		final String sleepMode[]={"awake","stage1","stage2","stage3","stage4","REM"};
 		//typeSet.add(sleepType);
-		
+
 		cfg=new Configuration(typeSet,Instant.parse("2015-01-01T00:00:00Z"),Instant.parse("2015-01-07T00:00:00Z")) {
 			StateMachine sm;
 			StateMachine sleepStateMachine;
@@ -475,7 +475,7 @@ public class DailyRhythm3 {
 						new RandomNumberGeneratorConfiguration(modeStateName,1L),
 						new RandomNumberGeneratorConfiguration(sleepStateName,2L),
 						new RandomNumberGeneratorConfiguration(sleepDirectionName,3L)
-						
+
 				};
 				StateMachineGroup theSmg=sms.getOrCreateStateMachineGroup(theSmgName, sms.getStateMachineGroupRoot());
 				Variable<Fatigue> fatigue=(Variable<Fatigue>) theSmg.getOrCreateVariable(Variable.Type.Object,"fatigue");
@@ -489,8 +489,8 @@ public class DailyRhythm3 {
 					dayCycleRemainDuration.add(Duration.parse("PT0h"));
 					dayCycleTransferDuration.add(Duration.parse("PT0h"));
 				}
-				
-				
+
+
 				StateMachine sleepDirection=theSmg.getOrCreateStateMachine(sleepDirectionName,rncgArr[2].getSeed());
 
 				this.setAdvanceTime(Duration.parse("PT1M"));
@@ -513,11 +513,11 @@ public class DailyRhythm3 {
 				}
 				final ModeState modeState=sm.getModeState();
 				modeState.addValue(Mode.getMode(sm,sm.getState("evening_night")));
-				
+
 				// edges
 				// create default conditions and do nothing actions
 
-				
+
 				Duration modeInterval=Duration.parse("PT24H");
 				modeInterval=modeInterval.dividedBy(dayStateNames.length);
 				Duration interModeInterval=modeInterval.dividedBy(4);
@@ -527,21 +527,21 @@ public class DailyRhythm3 {
 				Vector dayStateNameVector=new Vector(Arrays.asList(dayStateNames));
 
 				for (int i=0; i<dayStateNames.length; ++i) {
-					
-					
+
+
 					final OffsetTime startOfMode=timeSpec.minus(modeInterval).plus(modeInterval.multipliedBy(i));
 					final OffsetTime startOfTransferMode=timeSpec.minus(modeInterval).plus(modeInterval.multipliedBy(i+1));
-					
+
 					final int index=i;
 
-					Action doNothingAction=new Action("only update durations",sms) {
+					Action doNothingAction=new Action("only update durations"+i,sms) {
 						public boolean evaluate() {
 							final ZonedDateTime currentTime=sms.getEngineData().getTime().getTime().atZone(ZoneId.systemDefault());
 							Duration remainDuration=Duration.between(currentTime,startOfMode);
 							Duration transferDuration=Duration.between(currentTime,startOfTransferMode);
 							((Variable<Duration>)sm.getStateMachineGroup().getVariable("dayCycleRemainDuration")).setElementAt(remainDuration,index);
 							((Variable<Duration>)sm.getStateMachineGroup().getVariable("dayCycleTransferDuration")).setElementAt(remainDuration,index);
-							
+
 							return true;
 						}
 					};
@@ -569,7 +569,7 @@ public class DailyRhythm3 {
 					// add a remain edge to each state
 					Edge remainEdge=sm.getEdge(dayStateNames[i]+"___"+dayStateNames[i],dayStateNames[i],dayStateNames[i],remainRule);
 					this.getLog().addEventType(remainEdge.getEventName(), "daily cycle");
-					
+
 					// create a transfer edge whose action is to move to the next state
 
 					Condition transferIntervalCondition=new Condition(dayStateNames[i]+"_"+dayStateNames[(i+1)%dayStateNames.length]+"_transferCondition",sms) {
@@ -609,14 +609,14 @@ public class DailyRhythm3 {
 					Combination.Type combinationType=new Combination.Type(domainVector);
 					sm.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, sm.getState(startStateName), Arrays.asList(edges), new DayCycleProbabilityFunction()));
 
-					
+
 				}
 				sm.setStartState(sm.getState(dayStateNames[0]));
-				
+
 				// sleep state machine
 				sleepStateMachine=theSmg.getOrCreateStateMachine(sleepStateName,rncgArr[1].getSeed());
 				sleepStateMachine.setTracing(Trace.lvl1);
-				
+
 				String sleepEdgeNames[][]=new String[sleepMode.length][2];
 				int sleepStart=0;
 				for (String sleepStage:sleepMode) {
@@ -650,63 +650,45 @@ public class DailyRhythm3 {
 				sleepInterval.put(sleepMode[1],remaining*0.1);
 				sleepInterval.put(sleepMode[3],remaining*0.1);
 				sleepInterval.put(sleepMode[4],remaining*0.1);
-				for (int i=0; i<sleepMode.length; ++i) {
-					Condition stayInXCondition=new Condition("stayIn_"+sleepMode[i]+"_Condition",sms) {
-						public boolean evaluate(StateMachine sm) {
-							return true;
+				{
+					for ( int i=0; i<sleepMode.length; ++i) {
+						final String slmo=sleepMode[i];
+						Condition stayInXCondition=new Condition("stayIn_"+sleepMode[i]+"_Condition",sms) {
+							public boolean evaluate(StateMachine sm) {
+								return true;
+							};
 						};
-					};
-					Action stayInXAction=null;
-					stayInXAction= new Action("stayIn_"+sleepMode[i]+"_Action",sms) {
+						Action stayInXAction=null;
+						final String stayInXActionName="stayIn_"+sleepMode[i]+"_Action";
+						stayInXAction= new Action(stayInXActionName,sms) {
 
-						@Override
-						public boolean evaluate(StateMachine sm) {
-							final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
-							fatigue.increaseValue(Mode.getMode(sm,sm.getCurrentState()));
-							return true;
-						}
-					};
-					TransitionRule stayInXRule=sleepStateMachine.getTransitionRule(sleepEdgeNames[i][0]+"_remainRule",tick,stayInXCondition,stayInXAction);
-					final String stayInXEdgeName=sleepEdgeNames[i][0]+"___"+sleepEdgeNames[i][0]+"___stayInXEdge";
-					Edge stayInXEdge=sleepStateMachine.getEdge(stayInXEdgeName,sleepMode[i],sleepMode[i],stayInXRule);
-					this.getLog().addEventType(stayInXEdge.getEventName(), "circadian");
+							@Override
+							public boolean evaluate(StateMachine sm) {
+								final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
+								fatigue.increaseValue(Mode.getMode(sm,sm.getCurrentState()));
+								return true;
+							}
+						};
+						TransitionRule stayInXRule=sleepStateMachine.getTransitionRule(sleepEdgeNames[i][0]+"_remainRule",tick,stayInXCondition,stayInXAction);
+						final String stayInXEdgeName=sleepEdgeNames[i][0]+"___"+sleepEdgeNames[i][0]+"___stayInXEdge";
+						Edge stayInXEdge=sleepStateMachine.getEdge(stayInXEdgeName,sleepMode[i],sleepMode[i],stayInXRule);
+						this.getLog().addEventType(stayInXEdge.getEventName(), "circadian");
 
-					String endNameOfGoto;
-					String endState;
-					if (i<sleepMode.length-1) {
-						endNameOfGoto=sleepMode[(i+1)%sleepMode.length];
-						endState=endNameOfGoto;
-					} else {
-						endNameOfGoto=sleepMode[1]+"_reiteration";
-						endState=sleepMode[1];
-					}
-					Condition goToNextCondition=new Condition("goTo_"+endNameOfGoto+"_Condition",sms) {
-						public boolean evaluate(StateMachine sm) {
-							return true;
+						String endNameOfGoto;
+						String endState;
+						if (i<sleepMode.length-1) {
+							endNameOfGoto=sleepMode[(i+1)%sleepMode.length];
+							endState=endNameOfGoto;
+						} else {
+							endNameOfGoto=sleepMode[1]+"_reiteration";
+							endState=sleepMode[1];
 						}
-					};
-					Action goToNextAction=new Action("goTo_"+endNameOfGoto+"_Action",sms) {
-						@Override
-						public boolean evaluate(StateMachine sm) {
-							final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
-							lastSleepStateChangeTime=sm.getStateMachineSystem().getEngineData().getTime().getTime();
-							fatigue.increaseValue(Mode.getMode(sm,sm.getState(endState)));
-							return true;
-						}
-					};
-					TransitionRule goToNextRule=sleepStateMachine.getTransitionRule(sleepEdgeNames[i][0]+"_transferRule",tick,goToNextCondition,goToNextAction);
-					final String goToEdgeName=sleepEdgeNames[i][0]+"___"+sleepEdgeNames[i][1]+"___goToNextSleepModeEdge";
-					Edge goToNextEdge=sleepStateMachine.getEdge(goToEdgeName,sleepEdgeNames[i][0],sleepEdgeNames[i][1],goToNextRule);
-					this.getLog().addEventType(goToNextEdge.getEventName(), "circadian");
-
-					Edge goToAwakeEdge=null;
-					if (i>0) {
-						Condition goToAwakeCondition=new Condition("goTo_awake_from_"+sleepMode[i]+"_Condition",sms) {
+						Condition goToNextCondition=new Condition("goTo_"+endNameOfGoto+"_Condition",sms) {
 							public boolean evaluate(StateMachine sm) {
 								return true;
 							}
 						};
-						Action goToAwakeAction=new Action("goTo_awake_from_"+sleepMode[i]+"_Action",sms) {
+						Action goToNextAction=new Action("goTo_"+endNameOfGoto+"_Action",sms) {
 							@Override
 							public boolean evaluate(StateMachine sm) {
 								final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
@@ -714,33 +696,55 @@ public class DailyRhythm3 {
 								fatigue.increaseValue(Mode.getMode(sm,sm.getState(endState)));
 								return true;
 							}
-
 						};
-						TransitionRule goToAwakeRule=sleepStateMachine.getTransitionRule("awake"+"_specialTransferRule_from_"+sleepMode[i],tick,goToAwakeCondition,goToAwakeAction);
-						goToAwakeEdge=sleepStateMachine.getEdge(sleepEdgeNames[i][0]+"___"+sleepEdgeNames[0][0]+"___awakeEdge",sleepEdgeNames[i][0],sleepEdgeNames[0][0],goToAwakeRule);
-						this.getLog().addEventType(goToAwakeEdge.getEventName(), "circadian");
+						TransitionRule goToNextRule=sleepStateMachine.getTransitionRule(sleepEdgeNames[i][0]+"_transferRule",tick,goToNextCondition,goToNextAction);
+						final String goToEdgeName=sleepEdgeNames[i][0]+"___"+sleepEdgeNames[i][1]+"___goToNextSleepModeEdge";
+						Edge goToNextEdge=sleepStateMachine.getEdge(goToEdgeName,sleepEdgeNames[i][0],sleepEdgeNames[i][1],goToNextRule);
+						this.getLog().addEventType(goToNextEdge.getEventName(), "circadian");
+
+						Edge goToAwakeEdge=null;
+						if (i>0) {
+							Condition goToAwakeCondition=new Condition("goTo_awake_from_"+sleepMode[i]+"_Condition",sms) {
+								public boolean evaluate(StateMachine sm) {
+									return true;
+								}
+							};
+							Action goToAwakeAction=new Action("goTo_awake_from_"+sleepMode[i]+"_Action",sms) {
+								@Override
+								public boolean evaluate(StateMachine sm) {
+									final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
+									lastSleepStateChangeTime=sm.getStateMachineSystem().getEngineData().getTime().getTime();
+									fatigue.increaseValue(Mode.getMode(sm,sm.getState(endState)));
+									return true;
+								}
+
+							};
+							TransitionRule goToAwakeRule=sleepStateMachine.getTransitionRule("awake"+"_specialTransferRule_from_"+sleepMode[i],tick,goToAwakeCondition,goToAwakeAction);
+							goToAwakeEdge=sleepStateMachine.getEdge(sleepEdgeNames[i][0]+"___"+sleepEdgeNames[0][0]+"___awakeEdge",sleepEdgeNames[i][0],sleepEdgeNames[0][0],goToAwakeRule);
+							this.getLog().addEventType(goToAwakeEdge.getEventName(), "circadian");
+
+						}
+
+						Edge[] edges={stayInXEdge,goToNextEdge};
+						Vector<Edge> edgeVector=new Vector<Edge>();
+						edgeVector.addAll(Arrays.asList(edges));
+
+						if (i>0) {
+							edgeVector.add(goToAwakeEdge);
+						}
+						Combination.Domain d=StateDomain.getDomain(sleepStateMachine);
+						Vector<Combination.Domain> domainVector=new Vector<Combination.Domain>();
+						domainVector.add(d);
+						Combination.Domain d2=StateDomain.getDomain(sm);
+						domainVector.add(d2);
+						Combination.Type combinationType=new Combination.Type(domainVector);
+						sleepStateMachine.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, sleepStateMachine.getState(sleepEdgeNames[i][0]), edgeVector, new SleepStateProbabilityFunction()));
+
+
 
 					}
-						
-					Edge[] edges={stayInXEdge,goToNextEdge};
-					Vector<Edge> edgeVector=new Vector<Edge>();
-					edgeVector.addAll(Arrays.asList(edges));
-					
-					if (i>0) {
-						edgeVector.add(goToAwakeEdge);
-					}
-					Combination.Domain d=StateDomain.getDomain(sleepStateMachine);
-					Vector<Combination.Domain> domainVector=new Vector<Combination.Domain>();
-					domainVector.add(d);
-					Combination.Domain d2=StateDomain.getDomain(sm);
-					domainVector.add(d2);
-					Combination.Type combinationType=new Combination.Type(domainVector);
-					sm.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, sleepStateMachine.getState(sleepEdgeNames[i][0]), edgeVector, new SleepStateProbabilityFunction()));
-
-
-						
 				}
-				
+
 				sleepStateMachine.setStartState(sleepStateMachine.getState(sleepMode[0]));
 
 
@@ -748,8 +752,8 @@ public class DailyRhythm3 {
 				for (int i=0; i<sleepDirectionStateNames.length; ++i) {
 					final String sdsn=sleepDirectionStateNames[i];
 					State state=sleepDirection.getState(sdsn);
-					
-					
+
+
 				}
 				ModeState sleepDirectionModeState=sleepDirection.getModeState();
 				sleepDirectionModeState.addValue(Mode.getMode(sleepDirection, sleepDirection.getState("notResting")));
@@ -770,7 +774,7 @@ public class DailyRhythm3 {
 				final Path pathToSleepModeStateMachine=new Path();
 				pathToSleepModeStateMachine.addPart(new Path.Part("..",0)).addPart(new Path.Part(sleepStateName, 0));
 				final HashMap<AlertnessConditionSpecification,Edge> acs2e=new HashMap<AlertnessConditionSpecification,Edge>();
-				
+
 				HashSet<Mode> ms2=new HashSet<Mode>();
 				for (int i=0; i<sleepDirectionBaseEdges.length; ++i) {
 					Condition[] sX_sY_Condition=new Condition[2];;
@@ -778,12 +782,23 @@ public class DailyRhythm3 {
 					TransitionRule[] sX_sY_TransitionRule=new TransitionRule[2];
 					Edge[] sX_sY_Edge=new Edge[2];
 					for (int j=0; j<sleepDirectionBaseEdges.length; ++j) {
-					
+
 						final String edgeBaseName=sleepDirectionBaseEdges[i][j][0]+"___"+sleepDirectionBaseEdges[i][j][1]+"___sleepDirectionEdge";
 						if (i%2==0) { // remain
 
+							// transfer edge
+							sX_sY_Condition[j]=new Condition(edgeBaseName+"_remainCondition"+i,sms) {
+								@Override
+								public boolean evaluate(StateMachine sm) {
+
+
+									return true;
+								};
+							};
+
+
 						} else { // transfer
-							boolean ascending=sleepDirectionBaseEdges[i][j][0].compareTo("notResting")==0;
+							final boolean ascending=sleepDirectionBaseEdges[i][j][0].compareTo("notResting")==0;
 
 							// transfer edge
 							sX_sY_Condition[j]=new Condition(edgeBaseName+"_transferCondition"+i,sms) {
@@ -832,7 +847,7 @@ public class DailyRhythm3 {
 						sX_sY_Edge[j]=sleepDirection.getEdge(edgeBaseName+"_Edge"+i,sleepDirectionBaseEdges[i][j][0],sleepDirectionBaseEdges[i][j][1],sX_sY_TransitionRule[j]);
 						this.getLog().addEventType(sX_sY_Edge[j].getEventName(), "sleep direction");
 					}
-					
+
 					Edge[] edges={sX_sY_Edge[0],sX_sY_Edge[1]};
 					Vector<Edge> edgeVector=new Vector<Edge>();
 					edgeVector.addAll(Arrays.asList(edges));
@@ -843,45 +858,45 @@ public class DailyRhythm3 {
 					Combination.Domain d2=StateDomain.getDomain(sleepStateMachine);
 					domainVector.add(d2);
 					Combination.Type combinationType=new Combination.Type(domainVector);
-					sleepDirection.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, sleepStateMachine.getState(sleepEdgeNames[i][0]), edgeVector, new SleepStateProbabilityFunction()));
+					sleepDirection.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, sleepDirection.getState(sleepDirectionBaseEdges[i][0][0]), edgeVector, new SleepStateProbabilityFunction()));
 
-					
+
+					}
+					sleepDirection.setStartState(sleepDirection.getState("ascending"));
+					sleepDirection.setTracing(Trace.lvl1);
+
+
+
 				}
-				sleepDirection.setStartState(sleepDirection.getState("ascending"));
-				sleepDirection.setTracing(Trace.lvl1);
-				
-					
-				
-			}
 
-		};
-	}
-
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
-
-	@Before
-	public void setUp() throws Exception {
-	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
-
-	@Test
-	public void test() {
-		try {
-			
-			Engine engine=new Engine(cfg);
-			engine.validate();
-			engine.start();
-			engine.join();
-			assert(true);
-
-		} catch(Exception e) {
-			fail(e.getMessage());
+			};
 		}
-	}
 
-}
+		@AfterClass
+		public static void tearDownAfterClass() throws Exception {
+		}
+
+		@Before
+		public void setUp() throws Exception {
+		}
+
+		@After
+		public void tearDown() throws Exception {
+		}
+
+		@Test
+		public void test() {
+			try {
+
+				Engine engine=new Engine(cfg);
+				engine.validate();
+				engine.start();
+				engine.join();
+				assert(true);
+
+			} catch(Exception e) {
+				fail(e.getMessage());
+			}
+		}
+
+	}
