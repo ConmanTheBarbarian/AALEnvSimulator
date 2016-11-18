@@ -326,7 +326,7 @@ public class DailyRhythm2 {
 					};
 					final String startStateName=edgeNames[i][0];
 					final String endStateName=edgeNames[i][1];
-					final State endState=sm.getState(edgeNames[i][1]);
+					final State endState=sm.getOrCreateState(edgeNames[i][1]);
 					Action transferAction=new Action("transfer from "+edgeNames[i][0]+" to "+edgeNames[i][1]+" action",sms) {
 						public synchronized boolean evaluate() {
 							return true;
@@ -354,7 +354,7 @@ public class DailyRhythm2 {
 					}
 					
 				}
-				sm.setStartState(sm.getState(dayStateNames[0]));
+				sm.setStartState(sm.getOrCreateState(dayStateNames[0]));
 				
 				// sleep state machine
 				sleepStateMachine=new StateMachine(sleepStateName,sms);
@@ -526,7 +526,7 @@ public class DailyRhythm2 {
 						modeSet.clear();
 					}
 				}
-				sleepStateMachine.setStartState(sleepStateMachine.getState(sleepMode[0]));
+				sleepStateMachine.setStartState(sleepStateMachine.getOrCreateState(sleepMode[0]));
 
 			}
 

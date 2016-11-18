@@ -41,7 +41,7 @@ public class NamedObjectInStateMachineSystem extends NamedObject {
 	}
 
 	
-	NamedObjectInStateMachineSystem getNamedObjectInStateMachineSystemBackEnd(final NamedObjectInStateMachineSystem noism, final List<Path.Part> parts) {
+	NamedObjectInStateMachineSystem getNamedObjectInStateMachineSystemBackEnd(final NamedObjectInStateMachineSystem noism, final List<Path.Part> parts, int currentPosition) {
 		throw new IllegalArgumentException("Not implemented for "+this.getClass().getName());
 	}
 	List<String> splitAndCheckRoot(final String path,NamedObjectInStateMachineSystem element) {
@@ -57,9 +57,8 @@ public class NamedObjectInStateMachineSystem extends NamedObject {
 	}
 	
 	public synchronized StateMachine getStateMachine(final Path path) {
-		NamedObjectInStateMachineSystem element=null;
 		final List<Path.Part> partList=path.getPartVector();
-		final NamedObjectInStateMachineSystem noism=this.getNamedObjectInStateMachineSystemBackEnd(element,partList);
+		final NamedObjectInStateMachineSystem noism=this.getNamedObjectInStateMachineSystemBackEnd(this,partList, 0);
 		if (!(noism instanceof StateMachine)) {
 			throw new IllegalArgumentException("End node is not a StateMachine , but a "+noism.getClass().getName());
 		}
@@ -69,7 +68,7 @@ public class NamedObjectInStateMachineSystem extends NamedObject {
 	public synchronized StateMachineGroup getStateMachineGroup(final Path path) {
 		NamedObjectInStateMachineSystem element=null;
 		final List<Path.Part> partList=path.getPartVector();
-		final NamedObjectInStateMachineSystem noism=this.getNamedObjectInStateMachineSystemBackEnd(element,partList);
+		final NamedObjectInStateMachineSystem noism=this.getNamedObjectInStateMachineSystemBackEnd(element,partList, 0);
 		if (!(noism instanceof StateMachineGroup)) {
 			throw new IllegalArgumentException("End node is not a StateMachineGroup , but a "+noism.getClass().getName());
 		}

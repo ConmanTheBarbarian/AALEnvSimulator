@@ -12,12 +12,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jdistlib.rng.RandomEngine;
 import simulationBase.Base;
 import simulationBase.Configuration.RandomNumberGeneratorConfiguration;
 import simulationBase.Log;
@@ -40,6 +42,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	private HashMap<State,HashMap<State,HashMap<TransitionRule,Edge>>> edgeMap=new HashMap<State,HashMap<State,HashMap<TransitionRule,Edge>>>();
 	private ModeState modeState;
 	private RandomNumberGeneratorConfiguration rngCfg;
+	private RandomEngine randomEngine;
 	private HashMap<String,Edge> s2e=new HashMap<String,Edge>();
 	//private HashMap<Mode,HashMap<State,HashMap<Edge,EdgeProbability>>> probabilityMap=new HashMap<Mode,HashMap<State,HashMap<Edge,EdgeProbability>>>();
 	private HashMap<State,StateEdgeProbabilitySpecification> s2seps=new HashMap<State,StateEdgeProbabilitySpecification>();;
@@ -52,6 +55,9 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	//private HashSet<Mode.Type> typeSet=new HashSet<Mode.Type>();
 
 	private boolean valid=false;
+	public final RandomEngine getRandomEngine() {
+		return randomEngine;
+	}
 
 	/**
 	 * @param name
@@ -60,10 +66,12 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	private StateMachine(String name, StateMachineGroup smg, long seed ) {
 		super(name, smg.getStateMachineSystem());
 		rngCfg=new RandomNumberGeneratorConfiguration(name, seed);
+		this.randomEngine=new jdistlib.rng.MersenneTwister();
+		this.randomEngine.setSeed(seed);
 
 	}
 	public final synchronized void addStateEdgeProbabilitySpecification(StateEdgeProbabilitySpecification seps) {
-		
+
 		HashSet<Edge> allOutgoingEdgeSet=new HashSet<Edge>();
 		final HashMap<State,HashMap<TransitionRule,Edge>> s2tr2e=this.edgeMap.get(seps.getState());
 		if (s2tr2e!=null) {
@@ -74,26 +82,26 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		if (!(allOutgoingEdgeSet.containsAll(seps.getCandidateEdgeSet()) && seps.getCandidateEdgeSet().containsAll(allOutgoingEdgeSet))) {
 			throw new IllegalArgumentException("Not all edges of state"+seps.getState()+" are covered");
 		}
-			
+
 		s2seps.put(seps.getState(), seps);
 	}
 
-	
+
 	//	public int compareTo(StateMachine stateMachine) {
-//		final int n=this.getStateMachineSystem().hashCode()-stateMachine.getStateMachineSystem().hashCode();
-//
-//		if (n!=0) {
-//			return n;
-//		}
-//		return this.getName().compareTo(stateMachine.getName());
-//	}
+	//		final int n=this.getStateMachineSystem().hashCode()-stateMachine.getStateMachineSystem().hashCode();
+	//
+	//		if (n!=0) {
+	//			return n;
+	//		}
+	//		return this.getName().compareTo(stateMachine.getName());
+	//	}
 	@Override
 	public boolean evaluate() {
 		final HashMap<State,HashMap<TransitionRule,Edge>> string2edgeSet=edgeMap.get(currentState);
 		if (isTracing()) {
 			System.out.println("Evaluating "+this.getName());
 		}
-		
+
 		// check what edges are applicable and add them to the set of assingments
 		// to obtain the proper probability
 		Vector<Combination.Assignment> edgeConditionsAndContext=new Vector<Combination.Assignment>();
@@ -105,7 +113,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 				edgeConditionsAndContext.add(a);
 			}
 		}
-		
+
 		if (edgeConditionsAndContext.isEmpty()) {
 			return false;
 		}
@@ -124,65 +132,87 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 				break;
 			default:
 				break;
-			
+
 			}
 		}
-		
+
 		// add context
-		final StateEdgeProbabilitySpecification seps=s2seps.get(this);
-		final Combination.Type type=seps.getContextType();
-		for (Domain d: type.getElementType()) {
-			final ModeState ms=this.getStateMachineSystem().getMetaModeState().getModeState(d.getNamedObject().getName());
-			ms.getType();
-			//ms.getSt
-			//final Combination.Domain msd=new StateDomain()
-
+		Edge resultEdge=null;
+		final StateEdgeProbabilitySpecification seps=s2seps.get(this.getCurrentState());
+		TreeMap <Edge,Double> possibleEdgeTransitions=seps.evaluate();
+		double r=this.getRandomEngine().nextDouble();
+		for (HashMap.Entry<Edge,Double> e2d: possibleEdgeTransitions.entrySet()) {
+			final double cp=e2d.getValue();
+			if (r<cp) {
+				resultEdge=e2d.getKey();
+				break;
+			}
+			r-=cp;
 		}
-		return false;
 
-		//double r=this.getStateMachineSystem().getEngineData().nextDouble(this.getName());
+		if (resultEdge==null) {
+			throw new IllegalStateException("No applicable edge");
+		}
+		if (isTracing()) {
+			System.out.println("Taking edge "+resultEdge);
+
+			if (!resultEdge.getEndState().equals(this.getCurrentState())) {
+				Instant t=this.getStateMachineSystem().getEngineData().getTime().getTime();
+
+				final Log log=this.getStateMachineSystem().getEngineData().getConfiguration().getLog();
+				log.addEvent(resultEdge.getEventName(),t,"SM:"+this.getName());
+				log.callTracer(resultEdge.getEventName(),t);
+
+			}
+		}
+		this.moveTo(resultEdge.getEndState());
+		this.modeState.removeValue(Mode.getMode(this,resultEdge.getStartState()));
+		this.modeState.addValue(Mode.getMode(this,resultEdge.getEndState()));
+
+		return true;
+
 		//Edge resultEdge=null;
-//		for (Edge e:currentProbability.keySet()) {
-//			final double cp=currentProbability.get(e);
-//			if (r<cp) {
-//				resultEdge=e;
-//				break;
-//			}
-//			r-=cp;
-//		}
-//		if (resultEdge==null) {
-//			resultEdge=currentProbability.lastKey();
-//		}
-//		resultEdge.getTransitionRule().getAction().evaluate(this);
-//		if (isTracing()) {
-//			System.out.println("Taking edge "+resultEdge);
-//		
-//			if (!resultEdge.getEndName().equals(this.getCurrentState().getName())) {
-//				Instant t=this.getStateMachineSystem().getEngineData().getTime().getTime();
-//
-//				final Log log=this.getStateMachineSystem().getEngineData().getConfiguration().getLog();
-//				log.addEvent(resultEdge.getEventName(),t,"SM:"+this.getName());
-//				log.callTracer(resultEdge.getEventName(),t);
-//				
-//			}
-//		}
-//		this.moveTo(stateMap.get(resultEdge.getEndName()));
-//		this.modeState.removeValue(Mode.getMode(this,resultEdge.getStartName()));
-//		this.modeState.addValue(Mode.getMode(this,resultEdge.getEndName()));
-//
-//		
-//		return true;
+		//		for (Edge e:currentProbability.keySet()) {
+		//			final double cp=currentProbability.get(e);
+		//			if (r<cp) {
+		//				resultEdge=e;
+		//				break;
+		//			}
+		//			r-=cp;
+		//		}
+		//		if (resultEdge==null) {
+		//			resultEdge=currentProbability.lastKey();
+		//		}
+		//		resultEdge.getTransitionRule().getAction().evaluate(this);
+		//		if (isTracing()) {
+		//			System.out.println("Taking edge "+resultEdge);
+		//		
+		//			if (!resultEdge.getEndName().equals(this.getCurrentState().getName())) {
+		//				Instant t=this.getStateMachineSystem().getEngineData().getTime().getTime();
+		//
+		//				final Log log=this.getStateMachineSystem().getEngineData().getConfiguration().getLog();
+		//				log.addEvent(resultEdge.getEventName(),t,"SM:"+this.getName());
+		//				log.callTracer(resultEdge.getEventName(),t);
+		//				
+		//			}
+		//		}
+		//		this.moveTo(stateMap.get(resultEdge.getEndName()));
+		//		this.modeState.removeValue(Mode.getMode(this,resultEdge.getStartName()));
+		//		this.modeState.addValue(Mode.getMode(this,resultEdge.getEndName()));
+		//
+		//		
+		//		return true;
 	}
-	
+
 	@Override
 	public boolean evaluate(StateMachine sm) {
 		throw new IllegalArgumentException("State machine do not call evaluate with StateMachine as an argument");
 	}
 
-public State getCurrentState() {
+	public State getCurrentState() {
 		return this.currentState;
 	}
-public Edge getEdge(final String name) {
+	public Edge getEdge(final String name) {
 		final Edge edge=s2e.get(name);
 		if (edge==null) {
 			throw new IllegalStateException("Edge with name "+name+" does not exist");
@@ -198,7 +228,7 @@ public Edge getEdge(final String name) {
 			throw new IllegalArgumentException("Edge "+endState.getName()+" belongs to the state machine: "+endState.getStateMachine().getName()+" instead of "+this.getName());
 		}
 
-		
+
 		HashMap<State,HashMap<TransitionRule,Edge>> tmp=edgeMap.get(startState);
 		HashMap<TransitionRule,Edge> edgeSet=null;
 		if (tmp!=null) {
@@ -211,15 +241,15 @@ public Edge getEdge(final String name) {
 				return tmp2.get(transitionRule);
 			}
 			edgeSet=tmp2;
-			
-			
+
+
 		} else {
 			tmp=new HashMap<State,HashMap<TransitionRule,Edge>>();
 			edgeMap.put(startState,tmp);
 			final HashMap<TransitionRule,Edge> tmp2=new HashMap<TransitionRule,Edge>();
 			tmp.put(endState, tmp2);
 			edgeSet=tmp2;
-			
+
 		}
 		Edge edge=new Edge(name,getStateMachineSystem(),this,startState,endState,transitionRule);
 		s2e.put(name, edge);
@@ -250,23 +280,34 @@ public Edge getEdge(final String name) {
 		}
 		return result;
 	}
-public final synchronized ModeState getModeState() {
+	public final synchronized ModeState getModeState() {
 		return this.modeState;
 	}
 	/* (non-Javadoc)
 	 * @see stateMachine.NamedObjectInStateMachineSystem#getStateMachineBackEnd(stateMachine.NamedObjectInStateMachineSystem, java.lang.String[])
 	 */
 	@Override
-	NamedObjectInStateMachineSystem getNamedObjectInStateMachineSystemBackEnd(NamedObjectInStateMachineSystem noism,
-			List<Path.Part> parts) {
-		Path.Part head=parts.remove(0);
+	NamedObjectInStateMachineSystem getNamedObjectInStateMachineSystemBackEnd(final NamedObjectInStateMachineSystem noism,
+			final List<Path.Part> parts, final int currentPosition) {
+		if (currentPosition<0 || currentPosition>=parts.size()) {
+			throw new IllegalArgumentException("Current position "+currentPosition+" is out of range");
+		}
+		Path.Part head=parts.get(currentPosition);
+		NamedObjectInStateMachineSystem nextNoism=null;
 		if (head.getPart().compareTo(".")==0) {
-			return this;
+			nextNoism=noism;
 		}
 		if (head.getPart().compareTo("..")==0) {
-			return this.getStateMachineGroup();
+			nextNoism=((StateMachine)noism).getStateMachineGroup();
 		}
-		throw new IllegalArgumentException("Part "+noism.getQualifiedName()+"  has no children");
+		final int nextPosition=currentPosition+1;
+		if (nextPosition<parts.size()) {
+			return nextNoism.getNamedObjectInStateMachineSystemBackEnd(nextNoism, parts, nextPosition);
+		} 
+		if (nextNoism==null) {
+			throw new IllegalArgumentException("Part "+noism.getQualifiedName()+"  has no children");
+		}
+		return nextNoism;
 	}
 	public synchronized final State getOrCreateState(String stateName) {
 		State s=stateMap.get(stateName);
@@ -281,7 +322,7 @@ public final synchronized ModeState getModeState() {
 		return s;
 	}
 	@Override
-	 synchronized String getQualifiedBaseName() {
+	synchronized String getQualifiedBaseName() {
 		return stateMachineGroup.getQualifiedName()+"/"+this.getBaseName();
 	}
 	@Override
@@ -322,7 +363,7 @@ public final synchronized ModeState getModeState() {
 		tr=new TransitionRule(name,getStateMachineSystem(),this,event,condition,action);
 		s2tr.put(name, tr);
 		return tr;
-		
+
 	}
 	public Type getType() {
 		Type type=Type.getType(this.getBaseName()+"_type");
@@ -341,43 +382,43 @@ public final synchronized ModeState getModeState() {
 		return allStatesAreDefined;
 	}
 	//	public synchronized void addEdge(Edge edge) {
-//		if (stateMap.get(edge.getStartName())==null) {
-//			throw new IllegalArgumentException("Edge "+edge+" does not link states properly");
-//		}
-//		if (!edge.getStateMachineSystem().equals(this.getStateMachineSystem())) {
-//			throw new IllegalArgumentException("Edge "+edge.getName()+" belongs to the incorrect state machine system: "+edge.getStateMachineSystem().getName()+" instead of "+this.getStateMachineSystem().getName());
-//		}
-//		
-//		HashMap<String,HashMap<Edge>> tmp=edgeMap.get(edge.getStartName());
-//		HashSet<Edge> edgeSet=null;
-//		if (tmp!=null) {
-//			HashSet<Edge> tmp2=tmp.get(edge.getEndName());
-//			if (tmp2==null) {
-//				tmp2=new HashSet<Edge>();
-//				tmp.put(edge.getEndName(), tmp2);
-//			}
-//			if (tmp2.contains(edge)) {
-//				throw new IllegalArgumentException("Edge starting at "+edge.getStartName()+" and ending at "+edge.getEndName()+" already exists");
-//			}
-//			edgeSet=tmp2;
-//			
-//			
-//		} else {
-//			tmp=new HashMap<String,HashSet<Edge>>();
-//			edgeMap.put(edge.getStartName(),tmp);
-//			final HashSet<Edge> tmp2=new HashSet<Edge>();
-//			tmp.put(edge.getEndName(), tmp2);
-//			edgeSet=tmp2;
-//			
-//		}
-//		edgeSet.add(edge);
-//		final State state=stateMap.get(edge.getStartName());
-//		if (state==null) {
-//			throw new IllegalStateException("State "+edge.getStartName()+" does not exist");
-//		}
-//		edge.getTransitionRule().getEvent().subscribe(this);
-//
-//	}
+	//		if (stateMap.get(edge.getStartName())==null) {
+	//			throw new IllegalArgumentException("Edge "+edge+" does not link states properly");
+	//		}
+	//		if (!edge.getStateMachineSystem().equals(this.getStateMachineSystem())) {
+	//			throw new IllegalArgumentException("Edge "+edge.getName()+" belongs to the incorrect state machine system: "+edge.getStateMachineSystem().getName()+" instead of "+this.getStateMachineSystem().getName());
+	//		}
+	//		
+	//		HashMap<String,HashMap<Edge>> tmp=edgeMap.get(edge.getStartName());
+	//		HashSet<Edge> edgeSet=null;
+	//		if (tmp!=null) {
+	//			HashSet<Edge> tmp2=tmp.get(edge.getEndName());
+	//			if (tmp2==null) {
+	//				tmp2=new HashSet<Edge>();
+	//				tmp.put(edge.getEndName(), tmp2);
+	//			}
+	//			if (tmp2.contains(edge)) {
+	//				throw new IllegalArgumentException("Edge starting at "+edge.getStartName()+" and ending at "+edge.getEndName()+" already exists");
+	//			}
+	//			edgeSet=tmp2;
+	//			
+	//			
+	//		} else {
+	//			tmp=new HashMap<String,HashSet<Edge>>();
+	//			edgeMap.put(edge.getStartName(),tmp);
+	//			final HashSet<Edge> tmp2=new HashSet<Edge>();
+	//			tmp.put(edge.getEndName(), tmp2);
+	//			edgeSet=tmp2;
+	//			
+	//		}
+	//		edgeSet.add(edge);
+	//		final State state=stateMap.get(edge.getStartName());
+	//		if (state==null) {
+	//			throw new IllegalStateException("State "+edge.getStartName()+" does not exist");
+	//		}
+	//		edge.getTransitionRule().getEvent().subscribe(this);
+	//
+	//	}
 	public boolean isStateForEdge(final Edge edge) {
 		if (!edge.getStateMachineSystem().equals(this.getStateMachineSystem())) {
 			throw new IllegalArgumentException("Edge "+edge.getName()+" belongs to the incorrect state machine system: "+edge.getStateMachineSystem().getName()+" instead of "+this.getStateMachineSystem().getName());
@@ -391,8 +432,8 @@ public final synchronized ModeState getModeState() {
 			return false;
 		}
 		return tmp3.get(edge.getTransitionRule())!=null;
-		
-		
+
+
 	}
 
 	/**
@@ -401,36 +442,36 @@ public final synchronized ModeState getModeState() {
 	public boolean isTracing() {
 		return tracing!=Trace.lvl0;
 	}
-	
+
 	//	public synchronized void setProbability(Edge edge,Collection<Mode> mode,EdgeProbability probability) {
-//		if (!this.isStateForEdge(edge)) {
-//			throw new IllegalArgumentException("Edge "+edge.getName()+" does not belong to the state machine "+this.getName());
-//		}
-//		for (Mode m:mode) {
-//			HashMap<State,HashMap<Edge,EdgeProbability>> state2edge2probability=probabilityMap.get(m);
-//			if (state2edge2probability==null) {
-//				state2edge2probability=new HashMap<State,HashMap<Edge,EdgeProbability>>();
-//				probabilityMap.put(m, state2edge2probability);
-//			}
-//			final State state=stateMap.get(edge.getStartName());
-//			HashMap<Edge,EdgeProbability> edge2double=state2edge2probability.get(state);
-//			if (edge2double==null) {
-//				edge2double=new HashMap<Edge,EdgeProbability>();
-//				state2edge2probability.put(state, edge2double);
-//			}
-//			edge2double.put(edge, probability);
-//		}
-//	}
-//	public synchronized void addState(State state) {
-//		if (!state.getStateMachineSystem().equals(this.getStateMachineSystem())) {
-//			throw new IllegalArgumentException("State "+state.getName()+" belongs to the incorrect state machine system: "+state.getStateMachineSystem().getName()+" instead of "+this.getStateMachineSystem().getName());
-//
-//		}
-//		if (stateMap.get(state.getBaseName())!=null) {
-//			throw new IllegalArgumentException("State "+state.getName()+" already exists");
-//		}
-//		stateMap.put(state.getBaseName(), state);
-//	}
+	//		if (!this.isStateForEdge(edge)) {
+	//			throw new IllegalArgumentException("Edge "+edge.getName()+" does not belong to the state machine "+this.getName());
+	//		}
+	//		for (Mode m:mode) {
+	//			HashMap<State,HashMap<Edge,EdgeProbability>> state2edge2probability=probabilityMap.get(m);
+	//			if (state2edge2probability==null) {
+	//				state2edge2probability=new HashMap<State,HashMap<Edge,EdgeProbability>>();
+	//				probabilityMap.put(m, state2edge2probability);
+	//			}
+	//			final State state=stateMap.get(edge.getStartName());
+	//			HashMap<Edge,EdgeProbability> edge2double=state2edge2probability.get(state);
+	//			if (edge2double==null) {
+	//				edge2double=new HashMap<Edge,EdgeProbability>();
+	//				state2edge2probability.put(state, edge2double);
+	//			}
+	//			edge2double.put(edge, probability);
+	//		}
+	//	}
+	//	public synchronized void addState(State state) {
+	//		if (!state.getStateMachineSystem().equals(this.getStateMachineSystem())) {
+	//			throw new IllegalArgumentException("State "+state.getName()+" belongs to the incorrect state machine system: "+state.getStateMachineSystem().getName()+" instead of "+this.getStateMachineSystem().getName());
+	//
+	//		}
+	//		if (stateMap.get(state.getBaseName())!=null) {
+	//			throw new IllegalArgumentException("State "+state.getName()+" already exists");
+	//		}
+	//		stateMap.put(state.getBaseName(), state);
+	//	}
 	/**
 	 * @return the valid
 	 */
@@ -443,7 +484,7 @@ public final synchronized ModeState getModeState() {
 	}
 
 	public synchronized void removeEdge(Edge egde) {
-		
+
 	}
 	public synchronized void removeState(State state) {
 		stateMap.remove(state.getBaseName());
@@ -472,10 +513,10 @@ public final synchronized ModeState getModeState() {
 		}
 		this.startState = startState;
 		this.currentState=startState;
-		
+
 	}
 
-	
+
 
 	/**
 	 * @param tracing the tracing to set
@@ -495,7 +536,7 @@ public final synchronized ModeState getModeState() {
 	}
 
 	public synchronized final boolean validate() {
-		
+
 		for (State state:stateMap.values()) {
 			// check for outgoing edges
 			final HashMap<State, HashMap<TransitionRule,Edge>> tmp=edgeMap.get(state);
@@ -511,6 +552,6 @@ public final synchronized ModeState getModeState() {
 		} 
 		return valid;
 	}
-	
+
 
 }

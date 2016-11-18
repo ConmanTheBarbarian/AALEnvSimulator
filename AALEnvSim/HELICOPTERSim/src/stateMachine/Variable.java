@@ -597,7 +597,7 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 */
 	@Override
 	NamedObjectInStateMachineSystem getNamedObjectInStateMachineSystemBackEnd(NamedObjectInStateMachineSystem noism,
-			List<Path.Part> parts) {
+			List<Path.Part> parts, int currentPosition) {
 		Path.Part head=parts.remove(0);
 		if (head.getPart().compareTo(".")==0) {
 			return this;

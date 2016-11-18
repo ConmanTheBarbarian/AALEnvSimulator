@@ -8,7 +8,11 @@ public class NamedObject implements Comparable<NamedObject>{
 	NamedObject(String name) {
 		this.name=name;
 	}
-
+	
+	
+	public final synchronized String getLocalName() {
+		return this.name;
+	}
 	/**
 	 * @return the name
 	 */

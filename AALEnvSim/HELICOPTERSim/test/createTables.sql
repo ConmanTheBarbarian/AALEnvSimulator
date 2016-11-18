@@ -10,7 +10,7 @@ drop database simtest;
 
 create table eventType(
 id INTEGER PRIMARY KEY AUTO_INCREMENT,
-name VARCHAR(64),
+name VARCHAR(128),
 UNIQUE INDEX eventType_index(name),
 details VARCHAR(256)) DATA DIRECTORY = 'D:\DBS';
 

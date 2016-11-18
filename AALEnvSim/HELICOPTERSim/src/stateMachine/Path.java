@@ -1,11 +1,14 @@
 package stateMachine;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
 public class Path implements Iterable<Path.Part> {
 	private static final String instanceInfix="___instance_";
+	private static String specialParts[]={"/",".",".."};
+	private static Vector<String> specialPartsVector=new Vector<String>();;
 	private Vector<Part> partVector=new Vector<Part>();
 	public static final Part rootPart=new Part();
 	public static class Part {
@@ -39,12 +42,24 @@ public class Path implements Iterable<Path.Part> {
 		public synchronized final int getInstance() {
 			return instance;
 		}
+		public boolean isSpecialPart() {
+			synchronized(specialPartsVector) {
+				if (specialPartsVector.isEmpty()) {
+					specialPartsVector.addAll(Arrays.asList(specialParts));
+				}
+			}
+			return specialPartsVector.contains(this.part);
+		}
 		/* (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
 		@Override
 		public String toString() {
-			return String.format("%s%s%d", part, instanceInfix, instance);
+			if (this.isSpecialPart()) {
+				return part;
+			} else {
+				return String.format("%s%s%d", part, instanceInfix, instance);				
+			}
 		}
 		
 	}

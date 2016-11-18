@@ -81,7 +81,7 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 
 
 	synchronized void addVariable(Variable<?> v) {
-		s2v.put(v.getName(),v);
+		s2v.put(v.getLocalName(),v);
 		
 	}
 	public final synchronized boolean contains(StateMachine sm) {
@@ -122,31 +122,42 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 	 */
 	@Override
 	NamedObjectInStateMachineSystem getNamedObjectInStateMachineSystemBackEnd(NamedObjectInStateMachineSystem noism,
-			List<Path.Part> parts) {
-		Path.Part head=parts.remove(0);
+			List<Path.Part> parts, int currentPosition) {
+		if (currentPosition<0 || currentPosition>=parts.size()) {
+			throw new IllegalArgumentException("Current position "+currentPosition+" out of range");
+		}
+		Path.Part head=parts.get(currentPosition);
+		NamedObjectInStateMachineSystem nextNoism=null;
 		if (head.getPart().compareTo(".")==0) {
-			return this;
+			nextNoism=noism;
 		}
 		if (head.getPart().compareTo("..")==0) {
-			if (this.parent==null) {
+			if (((StateMachineGroup)noism).parent==null) {
 				throw new IllegalArgumentException("There is nothing above the root element");
 			}
-			return this.parent;
+			nextNoism=((StateMachineGroup)noism).parent;
 		}
-		final StateMachineOrGroup smog=s2smosmg.get(head.getPart());
+		final StateMachineOrGroup smog=s2smosmg.get(head.toString());
 		if (smog!=null) {
 			if (smog.isStateMachine()) {
-				return smog.getStateMachine();
+				nextNoism=smog.getStateMachine();
 			} else {
-				return smog.getStateMachineGroup();
+				nextNoism=smog.getStateMachineGroup();
 			}
 		}
 		final Variable<?> v=s2v.get(head.getPart());
 		if (v!=null) {
-			return v;
+			nextNoism=v;
 		}
 		
-		throw new IllegalArgumentException("Part "+noism.getQualifiedName()+"  has no child named"+head);
+		final int nextPosition=currentPosition+1;
+		if (nextPosition<parts.size()) {
+			nextNoism=nextNoism.getNamedObjectInStateMachineSystemBackEnd(nextNoism, parts, nextPosition);
+		} 
+		if (nextNoism==null) {
+			throw new IllegalArgumentException("Part "+noism.getQualifiedName()+"  has no child named"+head);
+		}
+		return nextNoism;
 	}
 
 	public final synchronized StateMachine getOrCreateStateMachine(final String name, long seed) {

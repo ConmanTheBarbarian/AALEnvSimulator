@@ -154,7 +154,7 @@ public class DailyRhythm1 {
 					};
 					final String startStateName=edgeNames[i][0];
 					final String endStateName=edgeNames[i][1];
-					final State endState=sm.getState(edgeNames[i][1]);
+					final State endState=sm.getOrCreateState(edgeNames[i][1]);
 					Action transferAction=new Action("transfer from "+edgeNames[i][0]+" to "+edgeNames[i][1]+" action",sms) {
 						public synchronized boolean evaluate() {
 							//sm.moveTo(endState);
@@ -183,7 +183,7 @@ public class DailyRhythm1 {
 					}
 					
 				}
-				sm.setStartState(sm.getState(dayStateNames[0]));
+				sm.setStartState(sm.getOrCreateState(dayStateNames[0]));
 				sm.validate();
 				
 				

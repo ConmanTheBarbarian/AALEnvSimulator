@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -257,8 +258,8 @@ public class DailyRhythm3 {
 		 * @see stateMachine.StateEdgeProbabilityFunctionSpecification#evaluate()
 		 */
 		@Override
-		public HashMap<Edge, Double> evaluate(Type type,State state, Set<Edge> edgeSet, Set<Edge> applicableEdgeSet) {
-			HashMap<Edge,Double> result=new HashMap<Edge,Double>();
+		public TreeMap<Edge, Double> evaluate(Type type,State state, Set<Edge> edgeSet, Set<Edge> applicableEdgeSet) {
+			TreeMap<Edge,Double> result=new TreeMap<Edge,Double>();
 			for (Edge edge:edgeSet) {
 				result.put(edge, 0.0);
 			}
@@ -274,6 +275,7 @@ public class DailyRhythm3 {
 			if (applicableEdgeSet.size()==1) {
 				this.count=0;
 				final Edge edge=applicableEdgeSet.iterator().next();
+				result.remove(edge);
 				result.put(edge, 1.0);
 				return result;
 			}
@@ -312,8 +314,8 @@ public class DailyRhythm3 {
 		 * @see stateMachine.StateEdgeProbabilityFunctionSpecification#evaluate()
 		 */
 		@Override
-		public HashMap<Edge, Double> evaluate(Type type,State state, Set<Edge> edgeSet, Set<Edge> applicableEdgeSet) {
-			HashMap<Edge,Double> result=new HashMap<Edge,Double>();
+		public TreeMap<Edge, Double> evaluate(Type type,State state, Set<Edge> edgeSet, Set<Edge> applicableEdgeSet) {
+			TreeMap<Edge,Double> result=new TreeMap<Edge,Double>();
 			for (Edge edge:edgeSet) {
 				result.put(edge, 0.0);
 			}
@@ -377,6 +379,7 @@ public class DailyRhythm3 {
 			if (stayInSleepModeProbability<0.0) {
 				stayInSleepModeProbability=0.0;
 			}
+			goToNextSleepModeProbability=1.0-stayInSleepModeProbability-awakenProbability;
 			//TODO
 			for (Edge edge:result.keySet()) {
 				if (edge.getBaseName().contains("___awakeEdge")) {
@@ -421,8 +424,8 @@ public class DailyRhythm3 {
 		 * @see stateMachine.StateEdgeProbabilityFunctionSpecification#evaluate()
 		 */
 		@Override
-		public HashMap<Edge, Double> evaluate(Type type,State state, Set<Edge> edgeSet, Set<Edge> applicableEdgeSet) {
-			HashMap<Edge,Double> result=new HashMap<Edge,Double>();
+		public TreeMap<Edge, Double> evaluate(Type type,State state, Set<Edge> edgeSet, Set<Edge> applicableEdgeSet) {
+			TreeMap<Edge,Double> result=new TreeMap<Edge,Double>();
 			for (Edge edge:edgeSet) {
 				result.put(edge, 0.0);
 			}
@@ -479,7 +482,7 @@ public class DailyRhythm3 {
 				};
 				StateMachineGroup theSmg=sms.getOrCreateStateMachineGroup(theSmgName, sms.getStateMachineGroupRoot());
 				Variable<Fatigue> fatigue=(Variable<Fatigue>) theSmg.getOrCreateVariable(Variable.Type.Object,"fatigue");
-				fatigue.add(new Fatigue(0.0));
+				fatigue.add(new Fatigue(1.0));
 
 				@SuppressWarnings("unchecked")
 				Variable<Duration> dayCycleRemainDuration=(Variable<Duration>) theSmg.getOrCreateVariable(Variable.Type.Object, "dayCycleRemainDuration");
@@ -807,8 +810,8 @@ public class DailyRhythm3 {
 								@Override
 								public boolean evaluate(StateMachine sm) {
 									final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
-									final StateMachine dailyCycleStateMachine=this.getStateMachine(pathToDailyCycleStateMachine);
-									final StateMachine sleepModeStateMachine=this.getStateMachine(pathToSleepModeStateMachine);
+									final StateMachine dailyCycleStateMachine=sm.getStateMachine(pathToDailyCycleStateMachine);
+									final StateMachine sleepModeStateMachine=sm.getStateMachine(pathToSleepModeStateMachine);
 
 									boolean fatigueCondition=false;
 									boolean awakeToSleepOrViceVersa=false;
@@ -860,46 +863,46 @@ public class DailyRhythm3 {
 					Combination.Domain d2=StateDomain.getDomain(sleepStateMachine);
 					domainVector.add(d2);
 					Combination.Type combinationType=new Combination.Type(domainVector);
-					sleepDirection.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, sleepDirection.getOrCreateState(sleepDirectionBaseEdges[i][0][0]), edgeVector, new SleepStateProbabilityFunction()));
-
-
-					}
-					sleepDirection.setStartState(sleepDirection.getOrCreateState("ascending"));
-					sleepDirection.setAllStatesAreDefined(true);
-					sleepDirection.setTracing(Trace.lvl1);
-
+					sleepDirection.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, sleepDirection.getOrCreateState(sleepDirectionBaseEdges[i][0][0]), edgeVector, new SleepDirectionProbabilityFunction()));
 
 
 				}
+				sleepDirection.setAllStatesAreDefined(true);
+				sleepDirection.setStartState(sleepDirection.getOrCreateState("notResting"));
+				sleepDirection.setTracing(Trace.lvl1);
 
-			};
-		}
 
-		@AfterClass
-		public static void tearDownAfterClass() throws Exception {
-		}
 
-		@Before
-		public void setUp() throws Exception {
-		}
-
-		@After
-		public void tearDown() throws Exception {
-		}
-
-		@Test
-		public void test() {
-			try {
-
-				Engine engine=new Engine(cfg);
-				engine.validate();
-				engine.start();
-				engine.join();
-				assert(true);
-
-			} catch(Exception e) {
-				fail(e.getMessage());
 			}
-		}
 
+		};
 	}
+
+	@AfterClass
+	public static void tearDownAfterClass() throws Exception {
+	}
+
+	@Before
+	public void setUp() throws Exception {
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
+
+	@Test
+	public void test() {
+		try {
+
+			Engine engine=new Engine(cfg);
+			engine.validate();
+			engine.start();
+			engine.join();
+			assert(true);
+
+		} catch(Exception e) {
+			fail(e.getMessage());
+		}
+	}
+
+}

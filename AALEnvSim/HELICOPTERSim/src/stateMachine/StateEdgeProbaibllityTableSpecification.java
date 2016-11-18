@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import simulationBase.Base;
@@ -82,7 +83,7 @@ public class StateEdgeProbaibllityTableSpecification extends
 	}
 
 	@Override
-	public HashMap<Edge, Double> evaluate() {
+	public TreeMap<Edge, Double> evaluate() {
 		return null;
 	}
 

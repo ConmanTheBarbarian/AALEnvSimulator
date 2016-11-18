@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import simulationBase.Base;
@@ -26,7 +27,7 @@ public abstract class StateEdgeProbabilitySpecification {
 		this.candidateEdgeSet.addAll(Arrays.asList(edgeArray));
 		this.state=state;
 	}
-	public abstract HashMap<Edge,Double> evaluate();
+	public abstract TreeMap<Edge,Double> evaluate();
 	/**
 	 * @return the contextType
 	 */
@@ -51,7 +52,7 @@ public abstract class StateEdgeProbabilitySpecification {
 		for (Edge edge: getCandidateEdgeSet()) {
 			final TransitionRule tr=edge.getTransitionRule();
 			final Condition condition=tr.getCondition();
-			if (condition.evaluate()) {
+			if (condition.evaluate(this.getState().getStateMachine())) {
 				applicableEdgeSet.add(edge);
 			}
 		}
