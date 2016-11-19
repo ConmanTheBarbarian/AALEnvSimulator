@@ -42,14 +42,17 @@ public class Event extends NamedObjectInStateMachineSystem implements Evaluation
 	}
 
 	protected HashMap<StateMachine,StateMachineSubscription> subscriberMap=new HashMap<StateMachine,StateMachineSubscription>();
+	private Priority priority;
 
 	/**
 	 * @param name
 	 * @param sms
+	 * @param priority TODO
 	 */
-	public Event(String name, StateMachineSystem sms) {
+	public Event(String name, StateMachineSystem sms, Priority priority) {
 		super(name, sms);
 		sms.addEvent(this);
+		this.priority=priority;
 	}
 	@Override
 	public boolean evaluate(final StateMachine sm) {
@@ -87,6 +90,9 @@ public class Event extends NamedObjectInStateMachineSystem implements Evaluation
 	@Override
 	public boolean evaluate() {
 		throw new IllegalArgumentException("You must call evaluate(StateMachine) on Condition objects");
+	}
+	public Priority getPriority() {
+		return priority;
 	}
 	
 

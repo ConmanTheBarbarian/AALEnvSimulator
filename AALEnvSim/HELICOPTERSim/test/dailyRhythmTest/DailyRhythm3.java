@@ -54,6 +54,7 @@ import stateMachine.Event;
 import stateMachine.Mode;
 import stateMachine.ModeState;
 import stateMachine.Path;
+import stateMachine.Priority;
 import stateMachine.State;
 import stateMachine.StateEdgeProbabilityFunctionSpecification;
 import stateMachine.StateMachine;
@@ -474,6 +475,8 @@ public class DailyRhythm3 {
 			StateMachine sleepStateMachine;
 			@Override
 			public void initialize(StateMachineSystem sms,Event tick) {
+				String[] priorityNames={"high","medium","variableUpdate","low"};
+				Priority.initializePriority(priorityNames);
 				RandomNumberGeneratorConfiguration[] rncgArr={
 						new RandomNumberGeneratorConfiguration(modeStateName,1L),
 						new RandomNumberGeneratorConfiguration(sleepStateName,2L),

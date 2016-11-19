@@ -25,11 +25,11 @@ public class StateMachineSystem implements Evaluation {
 	private HashMap<String,Condition> conditionMap=new HashMap<String,Condition>();
 	private EngineData engineData;
 	private HashMap<String,Event> eventMap=new HashMap<String,Event>();
-	private Vector<Event> eventQueue=new Vector<Event>();
+	private PriorityQueue<Event> eventQueue=new PriorityQueue<Event>();
 	private MetaModeState metaMode;
 	private String name;
 	private HashMap<String,StateMachine> stateMachineMap=new HashMap<String,StateMachine>();
-	private Event tick=PrimitiveEvent.getPrimitiveEvent("tick",this);
+	private Event tick=PrimitiveEvent.getPrimitiveEvent("tick",this, Priority.getPriority("high"));
 	private HashMap<String,TransitionRule> transitionRuleMap=new HashMap<String,TransitionRule>();
 	private HashMap<String,StateMachineGroup> s2smg=new HashMap<String,StateMachineGroup>();
 	
@@ -99,8 +99,7 @@ public class StateMachineSystem implements Evaluation {
 	@Override
 	public boolean evaluate() {
 		while(!eventQueue.isEmpty()) {
-			final Event event=eventQueue.firstElement();
-			eventQueue.remove(event);
+			final Event event=eventQueue.dequeue();
 			final Collection<StateMachineSubscription> smsuSet=event.getSubscriberSet();
 			for (StateMachineSubscription smsu:smsuSet) {
 				final StateMachine sm=smsu.getStateMachine();
@@ -206,7 +205,7 @@ public class StateMachineSystem implements Evaluation {
 
 	public synchronized void signal(Event updateEvent) {
 		if (!eventQueue.contains(updateEvent)) {
-			eventQueue.addElement(updateEvent);			
+			eventQueue.enqueue(updateEvent,updateEvent.getPriority());			
 		}
 	}
 

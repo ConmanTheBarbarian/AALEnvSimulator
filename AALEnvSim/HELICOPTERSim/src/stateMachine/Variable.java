@@ -66,7 +66,7 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 		
 		}
 		final StateMachineSystem sms=smg.getStateMachineSystem();
-		v.updateEvent=PrimitiveEvent.getPrimitiveEvent(name+"_updateEvent",sms);
+		v.updateEvent=PrimitiveEvent.getPrimitiveEvent(name+"_updateEvent",sms, Priority.getPriority("variableUpdate"));
 		v.type=type;
 		smg.addVariable(v);
 

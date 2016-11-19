@@ -34,7 +34,11 @@ public class Priority implements Comparable<Priority> {
 	 * @param name
 	 * @return
 	 */
-	public static Priority getPriority(String name) {
+	public synchronized static Priority getPriority(String name) {
+		checkInitialization();
+		if (!priorities.contains(name)) {
+			throw new IllegalArgumentException("The priority "+name+" does not exist");
+		}
 		Priority p=s2i.get(name);
 		if (p==null) {
 			p=new Priority(name);
@@ -64,6 +68,9 @@ public class Priority implements Comparable<Priority> {
 			throw new IllegalArgumentException("The  \""+name+"\" is not a priority");
 		}
 		return n;
+	}
+	public int getIndex() {
+		return this.index;
 	}
 
 	/* (non-Javadoc)

@@ -14,7 +14,7 @@ public class EventDisjunction extends Event {
 	 * @param sms
 	 */
 	public EventDisjunction(String name, StateMachineSystem sms) {
-		super(name, sms);
+		super(name, sms, null);
 	}
 	/**
 	 * @param e
