@@ -351,9 +351,11 @@ public class DailyRhythm3 {
 				throw new IllegalStateException("State machine in impossible state "+currentState.getName());
 			}
 			final ZonedDateTime currentTime=state.getStateMachine().getStateMachineSystem().getEngineData().getTime().getTime().atZone(ZoneId.systemDefault());
-			double fatigueModifier=1.0-Math.exp(-50*fatigue.getValue());
+			double fatigueModifier=0.0;
 			if (index==0) {
-				fatigueModifier=1.0-fatigueModifier;
+				fatigueModifier=1.0-Math.exp(-50*(1.0-fatigue.getValue()));
+			} else {
+				fatigueModifier=1.0-Math.exp(-50*fatigue.getValue());
 			}
 
 

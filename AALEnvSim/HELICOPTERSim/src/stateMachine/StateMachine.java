@@ -106,19 +106,25 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 
 		// check what edges are applicable and add them to the set of assingments
 		// to obtain the proper probability
-		Vector<Combination.Assignment> edgeConditionsAndContext=new Vector<Combination.Assignment>();
-		for (HashMap<TransitionRule,Edge> edgeSet: string2edgeSet.values()) {
-			for (Edge edge:edgeSet.values()) {
-				final Combination.Domain d=Combination.BooleanDomain.getDomain(edge);
-				final Condition condition=edge.getTransitionRule().getCondition();
-				final Combination.Assignment a=new Combination.Assignment(d,new Combination.Value(condition.evaluate(this)));
-				edgeConditionsAndContext.add(a);
-			}
-		}
+//		Vector<Combination.Assignment> edgeConditionsAndContext=new Vector<Combination.Assignment>();
+//		for (HashMap<TransitionRule,Edge> edgeSet: string2edgeSet.values()) {
+//			for (Edge edge:edgeSet.values()) {
+//				final Combination.Domain d=Combination.BooleanDomain.getDomain(edge);
+//				final Condition condition=edge.getTransitionRule().getCondition();
+//				final Combination.Assignment a=new Combination.Assignment(d,new Combination.Value(condition.evaluate(this)));
+//				edgeConditionsAndContext.add(a);
+//			}
+//		}
 
-		if (edgeConditionsAndContext.isEmpty()) {
-			return false;
-		}
+//		if (edgeConditionsAndContext.isEmpty()) {
+//			return false;
+//		}
+
+
+		// add context
+		Edge resultEdge=null;
+		final StateEdgeProbabilitySpecification seps=s2seps.get(this.getCurrentState());
+		TreeMap <Edge,Double> possibleEdgeTransitions=seps.evaluate();
 		if (isTracing()) {
 			System.out.println("Time is "+this.getStateMachineSystem().getEngineData().getTime().getTime());
 			System.out.println("\tApplicable edges are ");
@@ -126,22 +132,17 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 			case lvl0:
 				break;
 			case lvl1:
-				edgeConditionsAndContext.stream().forEach(v->System.out.println("\t\t"+((Edge)v.getDomain().getNamedObject()).getStartState()+"->"+((Edge)v.getDomain().getNamedObject()).getEndState()+", "));
+				possibleEdgeTransitions.forEach((v,d)->System.out.println("\t\t"+v.getStartState()+"->"+v.getEndState()+" : probability = "+d+", "));
 				break;
 			case lvl2:
 			case lvl3:
-				edgeConditionsAndContext.stream().forEach(v->System.out.println("\t\t"+((Edge)v.getDomain().getNamedObject())+", "));
+				possibleEdgeTransitions.forEach((v,d)->System.out.println("\t\t"+v.getStartState()+"->"+v.getEndState()+" : probability = "+d+", "));
 				break;
 			default:
 				break;
 
 			}
 		}
-
-		// add context
-		Edge resultEdge=null;
-		final StateEdgeProbabilitySpecification seps=s2seps.get(this.getCurrentState());
-		TreeMap <Edge,Double> possibleEdgeTransitions=seps.evaluate();
 		double r=this.getRandomEngine().nextDouble();
 		for (HashMap.Entry<Edge,Double> e2d: possibleEdgeTransitions.entrySet()) {
 			final double cp=e2d.getValue();
