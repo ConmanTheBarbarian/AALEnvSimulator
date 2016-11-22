@@ -29,7 +29,7 @@ public class StateMachineSystem implements Evaluation {
 	private MetaModeState metaMode;
 	private String name;
 	private HashMap<String,StateMachine> stateMachineMap=new HashMap<String,StateMachine>();
-	private Event tick=PrimitiveEvent.getPrimitiveEvent("tick",this, Priority.getPriority("high"));
+	private Event tick=PrimitiveEvent.getPrimitiveEvent("tick",this, Priority.getPriorityWithIndex(0));
 	private HashMap<String,TransitionRule> transitionRuleMap=new HashMap<String,TransitionRule>();
 	private HashMap<String,StateMachineGroup> s2smg=new HashMap<String,StateMachineGroup>();
 	

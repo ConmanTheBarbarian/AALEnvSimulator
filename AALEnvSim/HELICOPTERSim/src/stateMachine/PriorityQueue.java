@@ -54,7 +54,7 @@ public class PriorityQueue<T> {
 	public boolean contains(T updateEvent) {
 		for (Priority p:p2q.keySet()) {
 			Vector<T> v=p2q.get(p);
-			if (!v.contains(updateEvent)) {
+			if (v.contains(updateEvent)) {
 				return true;
 			}
 		}

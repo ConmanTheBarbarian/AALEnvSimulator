@@ -160,10 +160,10 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		return nextNoism;
 	}
 
-	public final synchronized StateMachine getOrCreateStateMachine(final String name, long seed) {
+	public final synchronized StateMachine getOrCreateStateMachine(final String name, long seed, Priority priority) {
 		StateMachine sm=this.s2sm.get(name);
 		if (sm==null) {
-			sm=StateMachine.getStateMachine(name,this,seed);
+			sm=StateMachine.getStateMachine(name,this,seed,priority);
 			this.add(sm);
 			s2sm.put(name, sm);
 		}

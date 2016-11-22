@@ -22,7 +22,7 @@ public class EventDisjunction extends Event {
 	 * @see java.util.HashSet#add(java.lang.Object)
 	 */
 	public  synchronized  boolean add(PrimitiveEvent e) {
-		this.getSubscriberSet().parallelStream().forEach(smsu -> e.subscribe(smsu.getStateMachine()));
+		this.getSubscriberSet().parallelStream().forEach(smsu -> e.subscribe(smsu.getStateMachine(), null));
 		return disjunction.add(e);
 	}
 	/**
@@ -36,7 +36,7 @@ public class EventDisjunction extends Event {
 		}
 		this.getSubscriberSet().parallelStream().forEach(
 				smsu ->
-				c.parallelStream().forEach(pe-> ((Event) pe).subscribe(smsu.getStateMachine())
+				c.parallelStream().forEach(pe-> ((Event) pe).subscribe(smsu.getStateMachine(), null)
 				));
 
 		return disjunction.addAll((Collection<? extends PrimitiveEvent>) c);
@@ -131,8 +131,8 @@ public class EventDisjunction extends Event {
 		return disjunction.parallelStream();
 	}
 	@Override
-	public synchronized  void subscribe(final StateMachine stateMachine) {
-		disjunction.parallelStream().forEach(pe -> pe.subscribe(stateMachine));
+	public synchronized  void subscribe(final StateMachine stateMachine, Priority priority) {
+		disjunction.parallelStream().forEach(pe -> pe.subscribe(stateMachine, null));
 	}
 
 	@Override

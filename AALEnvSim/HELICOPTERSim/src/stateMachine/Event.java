@@ -3,15 +3,20 @@ package stateMachine;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeMap;
+import java.util.Vector;
+import java.util.stream.Collectors;
 
 public class Event extends NamedObjectInStateMachineSystem implements Evaluation {
 	
 	public class StateMachineSubscription implements Comparable<StateMachineSubscription> {
 		private int count;
 		private StateMachine stateMachine;
-		StateMachineSubscription(StateMachine stateMachine) {
+		private Priority priority;
+		StateMachineSubscription(StateMachine stateMachine, Priority priority) {
 			this.stateMachine=stateMachine;
 			this.count=0;
+			this.priority=priority;
 		}
 		@Override
 		public int compareTo(StateMachineSubscription arg0) {
@@ -38,45 +43,84 @@ public class Event extends NamedObjectInStateMachineSystem implements Evaluation
 		final void increaseCount() {
 			++this.count;			
 		}
+		/**
+		 * @return the priority
+		 */
+		public synchronized final Priority getPriority() {
+			return priority;
+		}
+		/**
+		 * @param priority the priority to set
+		 */
+		public synchronized final void setPriority(Priority priority) {
+			this.priority = priority;
+		}
+		
 		
 	}
 
-	protected HashMap<StateMachine,StateMachineSubscription> subscriberMap=new HashMap<StateMachine,StateMachineSubscription>();
+	protected TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>> subscriberMap=new TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>>();
+	protected HashMap<StateMachine,Priority> sm2p=new HashMap<StateMachine,Priority>();
 	private Priority priority;
 
 	/**
 	 * @param name
 	 * @param sms
-	 * @param priority TODO
+	 * @param priority2 TODO
 	 */
-	public Event(String name, StateMachineSystem sms, Priority priority) {
+	public Event(String name, StateMachineSystem sms, Priority priority2) {
 		super(name, sms);
 		sms.addEvent(this);
-		this.priority=priority;
+		this.priority=priority2;
 	}
 	@Override
 	public boolean evaluate(final StateMachine sm) {
 		return true;
 	}
 	synchronized final Collection<StateMachineSubscription> getSubscriberSet() {
-		return subscriberMap.values();
+		Vector<StateMachineSubscription> result=new Vector<StateMachineSubscription>();
+		for (Priority p: subscriberMap.keySet()) {
+			for (StateMachineSubscription sms:subscriberMap.get(p).values()) {
+				result.add(sms);
+			}
+		}
+		return result;
 	}
 
-	public synchronized  void subscribe(final StateMachine stateMachine) {
+	public synchronized  void subscribe(final StateMachine stateMachine, Priority priority) {
+		final Priority registeredPriority=sm2p.get(stateMachine);
+		if (registeredPriority!=null && registeredPriority.compareTo(priority)!=0) {
+			throw new IllegalArgumentException("State machine "+stateMachine.getName()+" is already assigned to event at a different priority");
+		}
 		
-		StateMachineSubscription smsu=subscriberMap.get(stateMachine);
+		HashMap<StateMachine,StateMachineSubscription> sm2sms=subscriberMap.get(priority);
+		if (sm2sms==null) {
+			sm2sms=new HashMap<StateMachine,StateMachineSubscription>();
+			subscriberMap.put(priority, sm2sms);
+		}
+		StateMachineSubscription smsu=sm2sms.get(stateMachine);
 		if (smsu==null) {
-			smsu=new StateMachineSubscription(stateMachine);
-			subscriberMap.put(stateMachine,smsu);
+			smsu=new StateMachineSubscription(stateMachine, priority);
+			sm2sms.put(stateMachine,smsu);
+			sm2p.put(stateMachine, priority);
 		}
 		smsu.increaseCount();
 	}
 	public synchronized  void unsubscribe(final StateMachine stateMachine) {
-		StateMachineSubscription smsu=subscriberMap.get(stateMachine);
+		final Priority priority=sm2p.get(stateMachine);
+		if (priority==null) {
+			throw new IllegalArgumentException("No such subscription for "+stateMachine);
+		}
+		HashMap<StateMachine,StateMachineSubscription> sm2sms=subscriberMap.get(priority);
+		if (sm2sms==null) {
+			throw new IllegalStateException("If priority exists, then there must be a subscription");
+		}
+		StateMachineSubscription smsu=sm2sms.get(stateMachine);
 		if (smsu!=null) {
 			smsu.decreaseCount();
 			if (smsu.getCount()==0) {
-				subscriberMap.remove(stateMachine);				
+				subscriberMap.remove(stateMachine);	
+				sm2p.remove(stateMachine);
 			}
 		}
 	}

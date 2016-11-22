@@ -94,11 +94,11 @@ public class DailyRhythm3 {
 		public final synchronized double getValue() {
 			return this.value;
 		}
-		public final synchronized void increaseValue(Mode mode) {
-			if (mode.getType().getName().compareTo("sleepState_type")!=0) {
-				throw new IllegalArgumentException("Mode "+mode+" is of incorrect type "+mode.getType().getName());
+		public final synchronized void increaseValue(State state) {
+			if (state.getStateMachine().getLocalName().compareTo("sleepState")!=0) {
+				throw new IllegalArgumentException("Stat "+state+" is of incorrect state machine "+state.getStateMachine());
 			}
-			this.value+=sleepStageDecreaseMap.get(mode.getValue());
+			this.value+=sleepStageDecreaseMap.get(state.getLocalName());
 			if (this.value<Base.epsilon) {
 				this.value=0.0;
 			} else if (this.value>1.0-Base.epsilon) {
@@ -109,18 +109,23 @@ public class DailyRhythm3 {
 	//static final Fatigue fatigue=new Fatigue(1.0);
 
 	static final private double bodyProcessFunctionProbability(double currentDuration,double typicalMaximumDuration,double rapidity) {
-		final double tmp=1.0-(typicalMaximumDuration-currentDuration)/typicalMaximumDuration;
+		double tmp=1.0-(typicalMaximumDuration-currentDuration)/typicalMaximumDuration;
+		if (tmp<0.0) {
+			tmp=0.0;
+		} else if (tmp>1.0) {
+			tmp=1.0;
+		}
 		//final double result=Math.min(1.0-Base.epsilon,Math.exp(-tmp/rapidity));
 		final double result=1.0-Beta.cumulative_raw(tmp, 50.0/(rapidity*25.0), 1.2, true, false);
 		return result;
 	}
 	static final private boolean isSleepTime(State state) {
-		if (state.getStateMachine().getBaseName().endsWith(modeStateName)) {
+		if (!state.getStateMachine().getBaseName().endsWith(modeStateName)) {
 			return false;
 		}
 		final String[] sleepTimePeriods={"evening_night","night","night_morning"};
 		final Vector<String> stp_vector=new Vector<String>(Arrays.asList(sleepTimePeriods));
-		if (stp_vector.indexOf(state.getName())>=0) {
+		if (stp_vector.indexOf(state.getLocalName())>=0) {
 			return true;
 		}
 		return false;
@@ -376,7 +381,7 @@ public class DailyRhythm3 {
 			if (awakenProbability<0.0) {
 				awakenProbability=0.0;
 			}
-			stayInSleepModeProbability=maxProbability*bodyProcessFunctionProbability(duration, typicalDurationOfPeriod[index], 0.01)-awakenProbability;
+			stayInSleepModeProbability=maxProbability*bodyProcessFunctionProbability(duration, typicalDurationOfPeriod[index], 0.01)-awakenProbability+0.0;
 			if (stayInSleepModeProbability<0.0) {
 				stayInSleepModeProbability=0.0;
 			}
@@ -476,7 +481,12 @@ public class DailyRhythm3 {
 			@Override
 			public void initialize(StateMachineSystem sms,Event tick) {
 				String[] priorityNames={"high","medium","variableUpdate","low"};
-				Priority.initializePriority(priorityNames);
+				Priority.initializePriority(0,4);
+				Priority.setAlias(Priority.getPriority(0),"high");
+				Priority.setAlias(Priority.getPriority(1),"medium");
+				Priority.setAlias(Priority.getPriority(2), "variableUpdate");
+				Priority.setAlias(Priority.getPriority(3), "low");
+				
 				RandomNumberGeneratorConfiguration[] rncgArr={
 						new RandomNumberGeneratorConfiguration(modeStateName,1L),
 						new RandomNumberGeneratorConfiguration(sleepStateName,2L),
@@ -497,7 +507,7 @@ public class DailyRhythm3 {
 				}
 
 
-				StateMachine sleepDirection=theSmg.getOrCreateStateMachine(sleepDirectionName,rncgArr[2].getSeed());
+				StateMachine sleepDirection=theSmg.getOrCreateStateMachine(sleepDirectionName,rncgArr[2].getSeed(),Priority.getPriority("low"));
 
 				this.setAdvanceTime(Duration.parse("PT1M"));
 				this.getLog().setTracer(new AppTracer(this.getLog(),theSmg));
@@ -506,7 +516,7 @@ public class DailyRhythm3 {
 				for (RandomNumberGeneratorConfiguration rncg:rncgArr ) {
 					sms.getEngineData().addRandomNumberGenerator(rncg.getName(), rncg.getSeed());
 				}
-				sm=theSmg.getOrCreateStateMachine(modeStateName,rncgArr[0].getSeed());
+				sm=theSmg.getOrCreateStateMachine(modeStateName,rncgArr[0].getSeed(),Priority.getPriority("high"));
 				sm.setTracing(Trace.lvl1);
 				String edgeNames[][]=new String[dayStateNames.length][2];
 				int start=0;
@@ -621,7 +631,7 @@ public class DailyRhythm3 {
 				sm.setAllStatesAreDefined(true);
 
 				// sleep state machine
-				sleepStateMachine=theSmg.getOrCreateStateMachine(sleepStateName,rncgArr[1].getSeed());
+				sleepStateMachine=theSmg.getOrCreateStateMachine(sleepStateName,rncgArr[1].getSeed(),Priority.getPriority("medium"));
 				sleepStateMachine.setTracing(Trace.lvl1);
 
 				String sleepEdgeNames[][]=new String[sleepMode.length][2];
@@ -672,7 +682,7 @@ public class DailyRhythm3 {
 							@Override
 							public boolean evaluate(StateMachine sm) {
 								final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
-								fatigue.increaseValue(Mode.getMode(sm,sm.getCurrentState()));
+								fatigue.increaseValue(sm.getCurrentState());
 								return true;
 							}
 						};
@@ -700,7 +710,7 @@ public class DailyRhythm3 {
 							public boolean evaluate(StateMachine sm) {
 								final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
 								lastSleepStateChangeTime=sm.getStateMachineSystem().getEngineData().getTime().getTime();
-								fatigue.increaseValue(Mode.getMode(sm,sm.getOrCreateState(endState)));
+								fatigue.increaseValue(sm.getOrCreateState(endState));
 								return true;
 							}
 						};
@@ -721,7 +731,7 @@ public class DailyRhythm3 {
 								public boolean evaluate(StateMachine sm) {
 									final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
 									lastSleepStateChangeTime=sm.getStateMachineSystem().getEngineData().getTime().getTime();
-									fatigue.increaseValue(Mode.getMode(sm,sm.getOrCreateState(endState)));
+									fatigue.increaseValue(sm.getOrCreateState(endState));
 									return true;
 								}
 
@@ -792,7 +802,7 @@ public class DailyRhythm3 {
 					for (int j=0; j<sleepDirectionBaseEdges.length; ++j) {
 
 						final String edgeBaseName=sleepDirectionBaseEdges[i][j][0]+"___"+sleepDirectionBaseEdges[i][j][1]+"___sleepDirectionEdge";
-						if (i%2==0) { // remain
+						if (j%2==0) { // remain
 
 							// transfer edge
 							sX_sY_Condition[j]=new Condition(edgeBaseName+"_remainCondition"+i,sms) {
@@ -806,7 +816,7 @@ public class DailyRhythm3 {
 
 
 						} else { // transfer
-							final boolean ascending=sleepDirectionBaseEdges[i][j][0].compareTo("notResting")==0;
+							final boolean notResting=sleepDirectionBaseEdges[i][j][0].compareTo("notResting")==0;
 
 							// transfer edge
 							sX_sY_Condition[j]=new Condition(edgeBaseName+"_transferCondition"+i,sms) {
@@ -818,7 +828,7 @@ public class DailyRhythm3 {
 
 									boolean fatigueCondition=false;
 									boolean awakeToSleepOrViceVersa=false;
-									if (ascending) {
+									if (notResting) {
 										if (isSleepTime(dailyCycleStateMachine.getCurrentState())) {
 											fatigueCondition=Double.valueOf(fatigue.getValue())>0.90;
 										} else {

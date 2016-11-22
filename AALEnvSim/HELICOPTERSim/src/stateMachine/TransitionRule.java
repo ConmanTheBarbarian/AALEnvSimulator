@@ -44,8 +44,8 @@ public class TransitionRule extends NamedObjectInStateMachine {
 	public synchronized final Action getAction() {
 		return action;
 	}
-	public synchronized final void subscribe(StateMachine stateMachine) {
-		this.getEvent().subscribe(stateMachine);
+	public synchronized final void subscribe(StateMachine stateMachine, Priority priority) {
+		this.getEvent().subscribe(stateMachine, priority);
 	}
 	public synchronized final void unsubscribe(StateMachine stateMachine) {
 		this.getEvent().unsubscribe(stateMachine);

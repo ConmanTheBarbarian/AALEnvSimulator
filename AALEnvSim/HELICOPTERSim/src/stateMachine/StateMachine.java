@@ -28,8 +28,8 @@ import stateMachine.Mode.Type;
 
 public class StateMachine extends NamedObjectInStateMachineSystem implements Evaluation {
 	public enum Trace {lvl0,lvl1,lvl2,lvl3}
-	static StateMachine getStateMachine(final String name, final StateMachineGroup smg, long seed) {
-		StateMachine sm=new StateMachine(name,smg,seed);
+	static StateMachine getStateMachine(final String name, final StateMachineGroup smg, long seed, Priority priority) {
+		StateMachine sm=new StateMachine(name,smg,seed,priority);
 		final StateMachineSystem sms=smg.getStateMachineSystem();
 		sm.stateMachineGroup=smg;
 		sms.addStateMachine(sm);
@@ -55,6 +55,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	//private HashSet<Mode.Type> typeSet=new HashSet<Mode.Type>();
 
 	private boolean valid=false;
+	private Priority priority;
 	public final RandomEngine getRandomEngine() {
 		return randomEngine;
 	}
@@ -63,11 +64,12 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	 * @param name
 	 * @param sms
 	 */
-	private StateMachine(String name, StateMachineGroup smg, long seed ) {
+	private StateMachine(String name, StateMachineGroup smg, long seed, Priority priority ) {
 		super(name, smg.getStateMachineSystem());
 		rngCfg=new RandomNumberGeneratorConfiguration(name, seed);
 		this.randomEngine=new jdistlib.rng.MersenneTwister();
 		this.randomEngine.setSeed(seed);
+		this.priority=priority;
 
 	}
 	public final synchronized void addStateEdgeProbabilitySpecification(StateEdgeProbabilitySpecification seps) {
@@ -165,6 +167,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 
 			}
 		}
+		resultEdge.getTransitionRule().getAction().evaluate(this);
 		this.moveTo(resultEdge.getEndState());
 		this.modeState.removeValue(Mode.getMode(this,resultEdge.getStartState()));
 		this.modeState.addValue(Mode.getMode(this,resultEdge.getEndState()));
@@ -255,7 +258,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		s2e.put(name, edge);
 		edgeSet.put(transitionRule,edge);
 
-		edge.getTransitionRule().getEvent().subscribe(this);
+		edge.getTransitionRule().getEvent().subscribe(this, this.getPriority());
 		return edge;
 	}
 	public Edge getEdge(final String name,final String startStateName,final String endStateName,final TransitionRule transitionRule) {
@@ -551,6 +554,27 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 			throw new IllegalStateException("No start state set");
 		} 
 		return valid;
+	}
+
+	/**
+	 * @return the priority
+	 */
+	public synchronized final Priority getPriority() {
+		return priority;
+	}
+
+	/**
+	 * @param priority the priority to set
+	 */
+	public synchronized final void setPriority(Priority priority) {
+		if (this.priority.compareTo(priority)!=0) {
+			for (TransitionRule tr:s2tr.values()) {
+				final Event event=tr.getEvent();
+				event.unsubscribe(this);
+				event.subscribe(this,priority);
+			}
+			this.priority = priority;
+		}
 	}
 
 
