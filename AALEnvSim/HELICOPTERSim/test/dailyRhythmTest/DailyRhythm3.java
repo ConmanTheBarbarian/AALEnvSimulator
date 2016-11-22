@@ -149,10 +149,10 @@ public class DailyRhythm3 {
 			if (index<0) {
 				throw new IllegalStateException("State machine in impossible state "+currentState.getName());
 			}
-			double fatigueModifier=1.0-Math.exp(-50*fatigue.getValue());
-			if (index!=0) {
-				fatigueModifier=1.0-fatigueModifier;
+			if (index==0) {
+				return 0.0;
 			}
+			double fatigueModifier=Math.exp(-50*fatigue.getValue());
 			final double result=fatigueModifier*modifier[index];
 			if (sm.isTracing()) {
 				System.out.println("Awaken fatigue="+fatigue.getValue()+" fatigue modifier="+fatigueModifier+" result="+result);
@@ -353,7 +353,7 @@ public class DailyRhythm3 {
 			final ZonedDateTime currentTime=state.getStateMachine().getStateMachineSystem().getEngineData().getTime().getTime().atZone(ZoneId.systemDefault());
 			double fatigueModifier=0.0;
 			if (index==0) {
-				fatigueModifier=1.0-Math.exp(-50*(1.0-fatigue.getValue()));
+				fatigueModifier=1.0-Math.exp(-100*(1.0-fatigue.getValue()));
 			} else {
 				fatigueModifier=1.0-Math.exp(-50*fatigue.getValue());
 			}
@@ -567,19 +567,20 @@ public class DailyRhythm3 {
 					Condition remainIntervalCondition=new Condition(dayStateNames[i]+"_remainCondition",sms) {
 						@Override
 						public  boolean evaluate(StateMachine sm) {
-							final ZonedDateTime currentTime=sms.getEngineData().getTime().getTime().atZone(ZoneId.systemDefault());
-							final int hour=currentTime.getHour();
-							final int diff=hour-startOfMode.getHour();
-							if (diff>=0 || diff<-20) {
-								if (diff>0||diff<-20) {
-									return true;
-								}
-								final int minute=currentTime.getMinute();
-								if (minute>=startOfMode.getMinute()) {
-									return true;
-								} 
-							}
-							return false;
+							return true;
+//							final ZonedDateTime currentTime=sms.getEngineData().getTime().getTime().atZone(ZoneId.systemDefault());
+//							final int hour=currentTime.getHour();
+//							final int diff=hour-startOfMode.getHour();
+//							if (diff>=0 || diff<-20) {
+//								if (diff>0||diff<-20) {
+//									return true;
+//								}
+//								final int minute=currentTime.getMinute();
+//								if (minute>=startOfMode.getMinute()) {
+//									return true;
+//								} 
+//							}
+//							return false;
 						}
 					};
 					TransitionRule remainRule=sm.getTransitionRule(dayStateNames[i]+"_remainRule",tick,remainIntervalCondition,doNothingAction);

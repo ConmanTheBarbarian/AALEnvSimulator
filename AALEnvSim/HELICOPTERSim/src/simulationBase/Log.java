@@ -10,6 +10,8 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -53,24 +55,9 @@ public class Log {
 	private Tracer tracer=null;
 	
 	private Timestamp convertInstantToTimestamp(final Instant timestamp) {
-		final Timestamp t=Timestamp.from(timestamp);
-		final GregorianCalendar gc1=new GregorianCalendar();
-		gc1.setTimeZone(TimeZone.getTimeZone("UTC"));
-		final GregorianCalendar gc2=new GregorianCalendar();
-		gc1.setTime(Date.from(timestamp));
-		gc2.setTime(t);
-		int difference=(gc1.get(Calendar.HOUR)-gc2.get(Calendar.HOUR));
 		Instant tmp=timestamp;
-		if (difference!=0) {
-			final Duration duration=Duration.parse("PT1H");
-			for (int i=0; i<Math.abs(difference); ++i) {
-				if (difference>0) {
-					tmp=tmp.plus(duration);
-				} else {
-					tmp=tmp.minus(duration);
-				}
-			}
-		}
+		final Duration duration=Duration.parse("PT1H");
+		tmp=tmp.minus(duration);
 		final Timestamp theTimestamp=Timestamp.from(tmp);
 		return theTimestamp;
 
