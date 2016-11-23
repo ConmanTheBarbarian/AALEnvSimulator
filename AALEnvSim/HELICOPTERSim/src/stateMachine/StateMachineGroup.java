@@ -213,6 +213,25 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		s2smosmg.remove(smg.getName());
 		
 	}
+
+
+
+	/* (non-Javadoc)
+	 * @see stateMachine.NamedObjectInStateMachineSystem#getCurrentVirtualSubject()
+	 */
+	@Override
+	public synchronized String getCurrentVirtualSubject() {
+		final String currentVirtualSubject= super.getCurrentVirtualSubject();
+		if (currentVirtualSubject!=null) {
+			return currentVirtualSubject;
+		} 
+		if (this.parent!=null) {
+			return this.parent.getCurrentVirtualSubject();
+		}
+		return null;
+		
+	}
+	
 	
 	
 }

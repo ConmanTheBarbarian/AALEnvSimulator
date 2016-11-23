@@ -468,6 +468,7 @@ public class DailyRhythm3 {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		final String[] virtualSubjects={"1"};
 		//Mode.Type type=new Mode.Type("The type");
 		final String dayStateNames[]={"evening_night","night","night_morning","morning","morning_lunch","lunch","lunch_afternoon","afternoon","afternoon_evening","evening"};
 
@@ -477,7 +478,7 @@ public class DailyRhythm3 {
 		final String sleepMode[]={"awake","stage1","stage2","stage3","stage4","REM"};
 		//typeSet.add(sleepType);
 
-		cfg=new Configuration(typeSet,Instant.parse("2015-01-01T00:00:00Z"),Instant.parse("2015-01-07T00:00:00Z")) {
+		cfg=new Configuration(typeSet,Instant.parse("2015-01-01T00:00:00Z"),Instant.parse("2015-01-31T00:00:00Z")) {
 			StateMachine sm;
 			StateMachine sleepStateMachine;
 			@Override
@@ -496,6 +497,10 @@ public class DailyRhythm3 {
 
 				};
 				StateMachineGroup theSmg=sms.getOrCreateStateMachineGroup(theSmgName, sms.getStateMachineGroupRoot());
+				theSmg.setCurrentVirtualSubject(virtualSubjects[0]);
+				for (String vs:virtualSubjects) {
+					this.getLog().addVirtualSubject(vs);
+				}
 				Variable<Fatigue> fatigue=(Variable<Fatigue>) theSmg.getOrCreateVariable(Variable.Type.Object,"fatigue");
 				fatigue.add(new Fatigue(1.0));
 

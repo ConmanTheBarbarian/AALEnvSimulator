@@ -8,6 +8,7 @@ public class NamedObjectInStateMachineSystem extends NamedObject {
 	private StateMachineSystem stateMachineSystem;
 	private long instance=0;
 	private static final String instanceSuffix="___instance_";
+	private String currentVirtualSubject=null;
 	
 
 	public NamedObjectInStateMachineSystem(String name, StateMachineSystem sms) {
@@ -74,6 +75,12 @@ public class NamedObjectInStateMachineSystem extends NamedObject {
 		}
 		return (StateMachineGroup)noism;
 		
+	}
+	public synchronized String getCurrentVirtualSubject() {
+		return currentVirtualSubject;
+	}
+	public synchronized void setCurrentVirtualSubject(final String name) {
+		this.currentVirtualSubject=name;
 	}
 	
 

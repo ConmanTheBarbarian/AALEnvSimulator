@@ -5,7 +5,24 @@ drop table doubleData;
 drop table log ;
 
 drop table eventType;
+drop table virtualSubjectConfiguration;
+drop table virtualSubject;
 drop database simtest; 
+
+create table virtualSubject(
+id INTEGER PRIMARY KEY AUTO_INCREMENT,
+name VARCHAR(128)
+) DATA DIRECTORY = 'D:\DBS';
+
+create table virtualSubjectConfiguration(
+id INTEGER PRIMARY KEY AUTO_INCREMENT,
+vid INTEGER NOT NULL,
+INDEX vid_index(vid),
+FOREIGN KEY(vid)
+  references virtualSubject(id)
+  on delete cascade,
+  name VARCHAR(128),
+  value DOUBLE) DATA DIRECTORY = 'D:\DBS';
 
 
 create table eventType(
@@ -22,6 +39,11 @@ UNIQUE INDEX eidTime_index(eid,t),
 INDEX eid_index(eid),
 FOREIGN KEY(eid)
 	references eventType(id)
+    on delete cascade,
+vid INTEGER NOT NULL,
+INDEX vid_index(vid),
+FOREIGN KEY(vid)
+    references virtualSubject(id)
     on delete cascade,
 information VARCHAR(256)
 ) DATA DIRECTORY = 'D:\DBS';
@@ -54,8 +76,10 @@ grant select, insert, update, delete on eventType to access@localhost;
 grant select, insert, update, delete on log to access@localhost;
 grant select, insert, update, delete on doubleData to access@localhost;
 grant select, insert, update, delete on intData to access@localhost;
+grant select, insert, update, delete on  virtualSubject to access@localhost;
+grant select, insert, update, delete on  virtualSubjectConfiguration to access@localhost;
 select * from log;
-select log.t,eventtype.name,eventType.details,doubleData.name,doubleData.data from log inner join eventtype on log.eid=eventtype.id left join doubleData on log.id=doubleData.lid;
+select log.t,log.vid,eventtype.name,eventType.details,doubleData.name,doubleData.data from log inner join eventtype on log.eid=eventtype.id left join doubleData on log.id=doubleData.lid order by log.t;
 select * from eventType;
 describe eventtype;
 select * from doubleData;

@@ -163,7 +163,8 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 				Instant t=this.getStateMachineSystem().getEngineData().getTime().getTime();
 
 				final Log log=this.getStateMachineSystem().getEngineData().getConfiguration().getLog();
-				log.addEvent(resultEdge.getEventName(),t,"SM:"+this.getName());
+				final String currentVirtualSubject=this.getCurrentVirtualSubject();
+				log.addEvent(resultEdge.getEventName(),t,"SM:"+this.getName(),currentVirtualSubject);
 				log.callTracer(resultEdge.getEventName(),t);
 
 			}
@@ -206,6 +207,15 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		//
 		//		
 		//		return true;
+	}
+
+	@Override
+	public synchronized String getCurrentVirtualSubject() {
+		final String currentVirtualSubject=super.getCurrentVirtualSubject();
+		if (currentVirtualSubject!=null) {
+			return currentVirtualSubject;
+		} 
+		return this.getStateMachineGroup().getCurrentVirtualSubject();
 	}
 
 	@Override

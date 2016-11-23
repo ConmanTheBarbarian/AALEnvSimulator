@@ -37,6 +37,9 @@ public class Log {
 	private final String password="accessOnly";
 	
 	private Connection connection=null;
+	private PreparedStatement addVirtualSubject=null;
+	private PreparedStatement addVirtualSubjectConfiguration=null;
+
 	private PreparedStatement addEventType=null;
 	private PreparedStatement addEvent=null;
 	private PreparedStatement addDouble=null;
@@ -87,8 +90,10 @@ public class Log {
 		}
 		
 		try {
+			addVirtualSubject=connection.prepareStatement("INSERT INTO simtest.virtualSubject(name) VALUES(?)",1);
+			addVirtualSubjectConfiguration=connection.prepareStatement("INSERT INTO virtualSubjectConfiguration(vid,name,value) VALUES((SELECT id FROM simTest.virtualSubject WHERE name=?),?,?)",1);
 			addEventType=connection.prepareStatement("INSERT INTO simtest.eventType(name,details) VALUES(?,?)",1);
-			addEvent=connection.prepareStatement("INSERT INTO simtest.log(t,eid,information) VALUES (?,(SELECT id FROM simTest.eventType WHERE name=?),?)",1);
+			addEvent=connection.prepareStatement("INSERT INTO simtest.log(t,eid,information,vid) VALUES (?,(SELECT id FROM simTest.eventType WHERE name=?),?,(SELECT id FROM simTest.virtualSubject WHERE name=?))",1);
 			addDouble=connection.prepareStatement("INSERT INTO simtest.doubleData(lid,name,data) VALUES((SELECT id FROM simTest.log WHERE eid=(SELECT id FROM simTest.eventType WHERE name=?) and t=?),?,?)",1);
 			addInteger=connection.prepareStatement("INSERT INTO simtest.intData(lid,name,data) VALUES(?,?,?)",1);
 		} catch (SQLException e) {
@@ -118,6 +123,32 @@ public class Log {
 		}
 	}
 	
+	public synchronized void addVirtualSubject(final String name) {
+		try {
+			addVirtualSubject.setString(1, name);
+			addVirtualSubject.executeUpdate();
+		} catch (SQLException e) {
+			if (e.getErrorCode()!=1062) {
+				throw new IllegalStateException(e);
+			}
+		}
+	}
+
+	public synchronized void addVirtualSubjectConfiguration(final String name,final String parameter, final Double value) {
+		try {
+			addVirtualSubjectConfiguration.setString(1, name);
+			addVirtualSubjectConfiguration.setString(2, parameter);
+			addVirtualSubjectConfiguration.setDouble(3, value);
+			
+			addVirtualSubjectConfiguration.executeUpdate();
+		} catch (SQLException e) {
+			if (e.getErrorCode()!=1062) {
+				throw new IllegalStateException(e);
+			}
+		}
+	}
+
+	
 	public synchronized void addEventType(final String name,final String detail) {
 		try {
 			addEventType.setString(1, name);
@@ -130,7 +161,7 @@ public class Log {
 		}
 	}
 	
-	public synchronized void addEvent(final String eventTypeName,final Instant timestamp, final String comment)
+	public synchronized void addEvent(final String eventTypeName,final Instant timestamp, final String comment, final String virtualSubject)
 												 {
 		final Timestamp theTimestamp=convertInstantToTimestamp(timestamp);
 		//final Timestamp theTimestamp=Timestamp.from(timestamp.atZone(ZoneId.of("UTC")).toInstant());
@@ -139,6 +170,7 @@ public class Log {
 			addEvent.setString(2, eventTypeName);
 			addEvent.setTimestamp(1,theTimestamp);
 			addEvent.setString(3,comment);
+			addEvent.setString(4, virtualSubject);
 			addEvent.executeUpdate();
 			
 		} catch (SQLException e) {
