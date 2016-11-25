@@ -164,7 +164,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 
 				final Log log=this.getStateMachineSystem().getEngineData().getConfiguration().getLog();
 				final String currentVirtualSubject=this.getCurrentVirtualSubject();
-				log.addEvent(resultEdge.getEventName(),t,"SM:"+this.getName(),currentVirtualSubject);
+				log.addEvent(currentVirtualSubject,resultEdge.getEventName(),t,"SM:"+this.getName());
 				log.callTracer(resultEdge.getEventName(),t);
 
 			}

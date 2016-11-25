@@ -172,7 +172,7 @@ public class DailyRhythm3 {
 		@Override
 		public void addEvent(String eventTypeName, Instant t) {
 			final Fatigue fatigue=((Fatigue)this.smg.getVariable("fatigue").elementAt(0));
-			this.getLog().addDoubleData(eventTypeName, t, "fatigue", fatigue.getValue());
+			this.getLog().addDoubleData(eventTypeName, t, "fatigue", fatigue.getValue(), this.smg.getCurrentVirtualSubject());
 		}
 
 	}
@@ -468,7 +468,7 @@ public class DailyRhythm3 {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		final String[] virtualSubjects={"1"};
+		final String[] virtualSubjects={"1-6"};
 		//Mode.Type type=new Mode.Type("The type");
 		final String dayStateNames[]={"evening_night","night","night_morning","morning","morning_lunch","lunch","lunch_afternoon","afternoon","afternoon_evening","evening"};
 
@@ -478,22 +478,27 @@ public class DailyRhythm3 {
 		final String sleepMode[]={"awake","stage1","stage2","stage3","stage4","REM"};
 		//typeSet.add(sleepType);
 
-		cfg=new Configuration(typeSet,Instant.parse("2015-01-01T00:00:00Z"),Instant.parse("2015-01-31T00:00:00Z")) {
+		cfg=new Configuration(typeSet,Instant.parse("2015-01-01T00:00:00Z"),Instant.parse("2015-02-28T00:00:00Z")) {
 			StateMachine sm;
 			StateMachine sleepStateMachine;
 			@Override
 			public void initialize(StateMachineSystem sms,Event tick) {
+				
+				
 				String[] priorityNames={"high","medium","variableUpdate","low"};
 				Priority.initializePriority(0,4);
 				Priority.setAlias(Priority.getPriority(0),"high");
 				Priority.setAlias(Priority.getPriority(1),"medium");
 				Priority.setAlias(Priority.getPriority(2), "variableUpdate");
 				Priority.setAlias(Priority.getPriority(3), "low");
+
+				RandomEngine randomEngine=new MersenneTwister(6L);
+
 				
 				RandomNumberGeneratorConfiguration[] rncgArr={
-						new RandomNumberGeneratorConfiguration(modeStateName,1L),
-						new RandomNumberGeneratorConfiguration(sleepStateName,2L),
-						new RandomNumberGeneratorConfiguration(sleepDirectionName,3L)
+						new RandomNumberGeneratorConfiguration(modeStateName,randomEngine.nextLong()),
+						new RandomNumberGeneratorConfiguration(sleepStateName,randomEngine.nextLong()),
+						new RandomNumberGeneratorConfiguration(sleepDirectionName,randomEngine.nextLong())
 
 				};
 				StateMachineGroup theSmg=sms.getOrCreateStateMachineGroup(theSmgName, sms.getStateMachineGroupRoot());
@@ -501,6 +506,8 @@ public class DailyRhythm3 {
 				for (String vs:virtualSubjects) {
 					this.getLog().addVirtualSubject(vs);
 				}
+
+				
 				Variable<Fatigue> fatigue=(Variable<Fatigue>) theSmg.getOrCreateVariable(Variable.Type.Object,"fatigue");
 				fatigue.add(new Fatigue(1.0));
 
@@ -512,6 +519,8 @@ public class DailyRhythm3 {
 					dayCycleRemainDuration.add(Duration.parse("PT0h"));
 					dayCycleTransferDuration.add(Duration.parse("PT0h"));
 				}
+				Variable<Double> dayLength=(Variable<Double>) theSmg.getOrCreateVariable(Variable.Type.Object, "dayLength");
+				dayLength.add(Uniform.random(16.0, 18.0, randomEngine));
 
 
 				StateMachine sleepDirection=theSmg.getOrCreateStateMachine(sleepDirectionName,rncgArr[2].getSeed(),Priority.getPriority("low"));
@@ -667,8 +676,8 @@ public class DailyRhythm3 {
 						{"PT90M","PT110M"} // REM
 				};
 				HashMap<String,Double> sleepInterval=new HashMap<String,Double>();
-				RandomEngine re=new MersenneTwister(1L);
-				sleepInterval.put(sleepMode[0],Uniform.random(16.0, 18.0, re));
+				//TODO
+				sleepInterval.put(sleepMode[0],dayLength.elementAt(0));
 				double remaining=24.0-sleepInterval.get(sleepMode[0]);
 				sleepInterval.put(sleepMode[2], remaining/2.0);
 				sleepInterval.put(sleepMode[5],remaining*0.2);

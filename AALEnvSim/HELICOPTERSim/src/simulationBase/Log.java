@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
@@ -44,6 +45,8 @@ public class Log {
 	private PreparedStatement addEvent=null;
 	private PreparedStatement addDouble=null;
 	private PreparedStatement addInteger=null;
+	private PreparedStatement getEvents=null;
+	private PreparedStatement getRelatedDoubleData=null;
 	
 	public abstract static class Tracer {
 		private Log log;
@@ -64,6 +67,153 @@ public class Log {
 		final Timestamp theTimestamp=Timestamp.from(tmp);
 		return theTimestamp;
 
+	}
+	
+	public  class LoggedEvent {
+		private String virtualSubject;
+		private int databaseIdentityOfLogRecord;
+		private Timestamp timestamp;
+		private int databaseIdentityOfEventType;
+		private String name;
+		private String details;
+		private HashMap<String,Double> parameter=new HashMap<String,Double>();
+		/**
+		 * @param virtualSubject
+		 * @param databaseIdentityOfLogRecord 
+		 * @param timestamp
+		 * @param databaseIdentityOfEventType
+		 * @param name
+		 * @param details
+		 */
+		LoggedEvent(String virtualSubject, int databaseIdentityOfLogRecord,
+				Timestamp timestamp, int databaseIdentityOfEventType, String name, String details) {
+			this.virtualSubject = virtualSubject;
+			this.databaseIdentityOfLogRecord=databaseIdentityOfLogRecord;
+			this.timestamp = timestamp;
+			this.databaseIdentityOfEventType = databaseIdentityOfEventType;
+			this.name = name;
+			this.details = details;
+		}
+		/**
+		 * @return the virtualSubject
+		 */
+		public synchronized final String getVirtualSubject() {
+			return virtualSubject;
+		}
+		/**
+		 * @return the timestamp
+		 */
+		public synchronized final Timestamp getTimestamp() {
+			return timestamp;
+		}
+		/**
+		 * @return the databaseIdentityOfEvent
+		 */
+		public synchronized final int getDatabaseIdentityOfEventType() {
+			return databaseIdentityOfEventType;
+		}
+		/**
+		 * @return the name
+		 */
+		public synchronized final String getName() {
+			return name;
+		}
+		/**
+		 * @return the details
+		 */
+		public synchronized final String getDetails() {
+			return details;
+		}
+		/**
+		 * @return the databaseIdentityOfLogRecord
+		 */
+		public synchronized final int getDatabaseIdentityOfLogRecord() {
+			return databaseIdentityOfLogRecord;
+		}
+		public synchronized void put(String key, Double value) {
+			this.parameter.put(key, value);			
+		}
+		
+		public synchronized Double get(String key) {
+			return this.parameter.get(key);
+		}
+		
+		
+	}
+	
+	public  class LoggedEventIterator implements Iterator<LoggedEvent> {
+		private PreparedStatement query;
+		private ResultSet resultSet;
+		boolean initiated=false;
+		boolean queriedForHasNext=false;
+		boolean fetched=false;
+		boolean lastResultFromHasNext=false;
+		
+		public LoggedEventIterator(final Connection connection, String regexpPositive, String regexpNegative, String virtualSubject) {
+			
+			try {
+				this.query=connection.prepareStatement("SELECT virtualSubject.name, log.id, log.t, eventType.id,eventType.name,eventType.details from log inner join eventType on log.eid=eventType.id inner join virtualSubject on virtualSubject.id=log.vid WHERE eventType.name REGEXP ? and NOT (eventType.name REGEXP ?) and log.vid=(SELECT id FROM virtualSubject WHERE name=?) order by log.t",1);
+				query.setString(1, regexpPositive);
+				query.setString(2, regexpNegative);
+				query.setString(3, virtualSubject);
+				this.resultSet=query.executeQuery();
+			} catch (SQLException e) {
+				throw new IllegalArgumentException(e);
+			}
+		}
+
+		@Override
+		public synchronized boolean hasNext() {
+			try {
+				if (!initiated) {
+					initiated=true;
+					queriedForHasNext=true;
+					fetched=false;
+					lastResultFromHasNext=resultSet.next();
+				} else {
+					if (queriedForHasNext && ! fetched) {
+					} else if (!queriedForHasNext && fetched) {
+						queriedForHasNext=true;
+						fetched=false;
+						lastResultFromHasNext=resultSet.next();						
+					} else {
+						throw new IllegalStateException("Incorrect state of cursor");
+					}
+				}
+				return lastResultFromHasNext;
+			} catch (SQLException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+
+		@Override
+		public synchronized LoggedEvent next() {
+			if (!hasNext()) {
+				return null;
+			}
+			try {
+				final LoggedEvent loggedEvent=new LoggedEvent(
+						resultSet.getString(1), // virtualSubject
+						resultSet.getInt(2), // log record identity
+						resultSet.getTimestamp(3), // timestamp
+						resultSet.getInt(4), // event type identity
+						resultSet.getString(5), // event type name
+						resultSet.getString(6) // event type details
+						);
+				getRelatedDoubleData.setInt(1,resultSet.getInt(2));
+				final ResultSet rs=getRelatedDoubleData.executeQuery();
+				while (rs.next()) {
+					loggedEvent.put(rs.getString(1),rs.getDouble(2));
+				}
+				rs.close();
+				this.fetched=true;
+				this.queriedForHasNext=false;
+				return loggedEvent;
+			} catch (SQLException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+		
 	}
 
 
@@ -94,8 +244,10 @@ public class Log {
 			addVirtualSubjectConfiguration=connection.prepareStatement("INSERT INTO virtualSubjectConfiguration(vid,name,value) VALUES((SELECT id FROM simTest.virtualSubject WHERE name=?),?,?)",1);
 			addEventType=connection.prepareStatement("INSERT INTO simtest.eventType(name,details) VALUES(?,?)",1);
 			addEvent=connection.prepareStatement("INSERT INTO simtest.log(t,eid,information,vid) VALUES (?,(SELECT id FROM simTest.eventType WHERE name=?),?,(SELECT id FROM simTest.virtualSubject WHERE name=?))",1);
-			addDouble=connection.prepareStatement("INSERT INTO simtest.doubleData(lid,name,data) VALUES((SELECT id FROM simTest.log WHERE eid=(SELECT id FROM simTest.eventType WHERE name=?) and t=?),?,?)",1);
+			addDouble=connection.prepareStatement("INSERT INTO simtest.doubleData(lid,name,data) VALUES((SELECT id FROM simTest.log WHERE eid=(SELECT id FROM simTest.eventType WHERE name=?) and t=? and vid=(SELECT id FROM simTest.virtualSubject WHERE name=?)),?,?)",1);
 			addInteger=connection.prepareStatement("INSERT INTO simtest.intData(lid,name,data) VALUES(?,?,?)",1);
+			getEvents=connection.prepareStatement("SELECT log.vid, log.id, log.t, eventType.id,eventType.name,eventType.details from log inner join eventType on log.eid=eventType.id WHERE eventType.name REGEXP ? and NOT (eventType.name REGEXP ?) and log.vid=(SELECT id FROM virtualSubject WHERE name=?)",1);
+			getRelatedDoubleData=connection.prepareStatement("SELECT name,data FROM doubleData WHERE id=?",1);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -161,7 +313,7 @@ public class Log {
 		}
 	}
 	
-	public synchronized void addEvent(final String eventTypeName,final Instant timestamp, final String comment, final String virtualSubject)
+	public synchronized void addEvent(final String virtualSubject,final String eventTypeName, final Instant timestamp, final String comment)
 												 {
 		final Timestamp theTimestamp=convertInstantToTimestamp(timestamp);
 		//final Timestamp theTimestamp=Timestamp.from(timestamp.atZone(ZoneId.of("UTC")).toInstant());
@@ -179,13 +331,14 @@ public class Log {
 		
 		
 	}
-	public synchronized final void addDoubleData(final String eventTypeName,final Instant timestamp,final String name, final double data) {
+	public synchronized final void addDoubleData(final String eventTypeName,final Instant timestamp,final String name, final double data, String virtualSubject) {
 		try {
 			addDouble.setString(1,eventTypeName);
 			final Timestamp theTimestamp=convertInstantToTimestamp(timestamp);
 			addDouble.setTimestamp(2,theTimestamp);
-			addDouble.setString(3,name);
-			addDouble.setDouble(4, data);;
+			addDouble.setString(3,virtualSubject);
+			addDouble.setString(4,name);
+			addDouble.setDouble(5, data);;
 			addDouble.executeUpdate();
 		} catch (SQLException e) {
 			throw new IllegalStateException(e);

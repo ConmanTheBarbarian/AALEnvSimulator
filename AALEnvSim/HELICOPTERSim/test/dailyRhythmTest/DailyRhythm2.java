@@ -210,7 +210,7 @@ public class DailyRhythm2 {
 
 		@Override
 		public void addEvent(String eventTypeName, Instant t) {
-			this.getLog().addDoubleData(eventTypeName, t, "fatigue", fatigue.getValue());
+			this.getLog().addDoubleData(eventTypeName, t, "fatigue", fatigue.getValue(), "");
 		}
 		
 	}
