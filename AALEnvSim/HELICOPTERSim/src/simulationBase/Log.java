@@ -47,6 +47,8 @@ public class Log {
 	private PreparedStatement addInteger=null;
 	private PreparedStatement getEvents=null;
 	private PreparedStatement getRelatedDoubleData=null;
+	private PreparedStatement addResult=null;
+	private PreparedStatement addResultParameter=null;
 	
 	public abstract static class Tracer {
 		private Log log;
@@ -248,6 +250,8 @@ public class Log {
 			addInteger=connection.prepareStatement("INSERT INTO simtest.intData(lid,name,data) VALUES(?,?,?)",1);
 			getEvents=connection.prepareStatement("SELECT log.vid, log.id, log.t, eventType.id,eventType.name,eventType.details from log inner join eventType on log.eid=eventType.id WHERE eventType.name REGEXP ? and NOT (eventType.name REGEXP ?) and log.vid=(SELECT id FROM virtualSubject WHERE name=?)",1);
 			getRelatedDoubleData=connection.prepareStatement("SELECT name,data FROM doubleData WHERE id=?",1);
+			addResult=connection.prepareStatement("INSERT INTO simtest.result(vid,t,commentText) VALUES ((SELECT id FROM virtualSubject WHERE name=?),?,?)",1);
+			addResultParameter=connection.prepareStatement("INSERT INTO simtest.resultParameter(rid,name,value) VALUES (?,?,?)",1);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -343,6 +347,26 @@ public class Log {
 		} catch (SQLException e) {
 			throw new IllegalStateException(e);
 
+		}
+	}
+	
+	public synchronized final void addResult(String virtualSubject,Timestamp timestamp, String comment,HashMap<String,Double> parameters) {
+		try {
+			addResult.setString(1,virtualSubject);
+			addResult.setTimestamp(2, timestamp);
+			addResult.setString(3, comment);
+			addResult.executeUpdate();
+			ResultSet rs = addResult.getGeneratedKeys();
+		    rs.next();
+		    final int rid= rs.getInt(1);
+	    	addResultParameter.setInt(1,rid);
+		    for (HashMap.Entry<String,Double> es2d:parameters.entrySet()) {
+		    	addResultParameter.setString(2,es2d.getKey());
+		    	addResultParameter.setDouble(3, es2d.getValue());
+		    	addResultParameter.executeUpdate();
+		    }
+		} catch (SQLException e) {
+			throw new IllegalStateException(e);
 		}
 	}
 	

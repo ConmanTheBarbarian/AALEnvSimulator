@@ -64,7 +64,43 @@ import stateMachine.StateMachineSystem;
 import stateMachine.TransitionRule;
 import stateMachine.Variable;
 
-public class DailyRhythm3 {
+public class DailyRhythm3b {
+	public static class DisruptionProbabilityFunction extends
+			stateMachine.StateEdgeProbabilityFunctionSpecification.Function {
+		@Override
+		public TreeMap<Edge, Double> evaluate(Type type,State state, Set<Edge> edgeSet, Set<Edge> applicableEdgeSet) {
+			TreeMap<Edge,Double> result=new TreeMap<Edge,Double>();
+			for (Edge edge:edgeSet) {
+				result.put(edge, 0.0);
+			}
+
+
+
+			// if zero, 0.0 probability for all possibilities
+			if (applicableEdgeSet.size()==0) {
+				return result;
+			}
+			// if one, 100% probability to that one!
+			if (applicableEdgeSet.size()==1) {
+				final Edge edge=applicableEdgeSet.iterator().next();
+				result.remove(edge);
+				result.put(edge, 1.0);
+				return result;
+			}
+			if (applicableEdgeSet.size()==2) {
+				for (Edge edge:applicableEdgeSet) {
+					if (edge.getEndState().getBaseName().contains("___transfer")) {
+						result.put(edge, 0.01);
+					} else {
+						result.put(edge, 0.99);						
+					}
+				}
+			}
+			return null;
+		};
+
+	};
+
 	//static Mode.Type type;
 	static Set<Mode.Type> typeSet=new HashSet<Mode.Type>();
 	static Set<ModeState> modeStateSet=new HashSet<ModeState>();
@@ -73,22 +109,36 @@ public class DailyRhythm3 {
 	static double awakeIndex=0.1;
 	static final String sleepStateName="sleepState";
 	static final String sleepDirectionName="sleepDirection";
+	static final String disruptorName="disruptor";
 
 	static Instant lastSleepStateChangeTime=Instant.parse("2014-12-31T08:00:00Z");
 	public static class Fatigue {
 		private double value;
+		private double awakeDuration;
+		private double dayLength;
 		private HashMap<String,Double> sleepStageDecreaseMap=new HashMap<String,Double>();
-		public static final double defaultIncrease=(1.0-Base.epsilon)/(18.0*60.0);
-		public Fatigue(double value) {
+		public   double defaultIncrease;
+		private void computeParameters(double awakeDuration) {
+			if (awakeDuration<16.0 || awakeDuration>18.0) {
+				throw new IllegalArgumentException("Day length out of bounds "+awakeDuration);
+			}
+			this.awakeDuration=awakeDuration;
+			this.dayLength=(awakeDuration-17.0)+24.0;
+			this.defaultIncrease=(1.0-Base.epsilon)/(awakeDuration*60.0);
+			double night=8.0+(awakeDuration-17.0)*0.5;
 			if (sleepStageDecreaseMap.isEmpty()) {
-				sleepStageDecreaseMap.put("stage2", -(1.0)/(8.5*60.0));
-				sleepStageDecreaseMap.put("stage3", -(1.0)/(8.5*60.0));
-				sleepStageDecreaseMap.put("stage4", -(1.0)/(8.5*60.0));
-				sleepStageDecreaseMap.put("stage1", -(1.0)/(8.5*60.0));				
-				sleepStageDecreaseMap.put("REM",    -(1.0)/(8.5*60.0));	
+				sleepStageDecreaseMap.put("stage2", -(1.0)/(night*60.0));
+				sleepStageDecreaseMap.put("stage3", -(1.0)/(night*60.0));
+				sleepStageDecreaseMap.put("stage4", -(1.0)/(night*60.0));
+				sleepStageDecreaseMap.put("stage1", -(1.0)/(night*60.0));				
+				sleepStageDecreaseMap.put("REM",    -(1.0)/(night*60.0));	
 				sleepStageDecreaseMap.put("awake",  defaultIncrease);
 
 			}
+			
+		}
+		public Fatigue(double value, double awakeDuration) {
+			this.computeParameters(awakeDuration);
 			this.value=Math.max(Base.epsilon, Math.min(1.0-Base.epsilon,value));
 		}
 		public final synchronized double getValue() {
@@ -104,6 +154,10 @@ public class DailyRhythm3 {
 			} else if (this.value>1.0-Base.epsilon) {
 				this.value=1.0;
 			}
+		}
+		public void setDayLength(double awakeDuration) {
+			this.computeParameters(awakeDuration);
+			
 		}
 	}
 	//static final Fatigue fatigue=new Fatigue(1.0);
@@ -468,7 +522,7 @@ public class DailyRhythm3 {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		final String[] virtualSubjects={"1-7"};
+		final String[] virtualSubjects={"1-7-2"};
 		//Mode.Type type=new Mode.Type("The type");
 		final String dayStateNames[]={"evening_night","night","night_morning","morning","morning_lunch","lunch","lunch_afternoon","afternoon","afternoon_evening","evening"};
 
@@ -498,7 +552,9 @@ public class DailyRhythm3 {
 				RandomNumberGeneratorConfiguration[] rncgArr={
 						new RandomNumberGeneratorConfiguration(modeStateName,randomEngine.nextLong()),
 						new RandomNumberGeneratorConfiguration(sleepStateName,randomEngine.nextLong()),
-						new RandomNumberGeneratorConfiguration(sleepDirectionName,randomEngine.nextLong())
+						new RandomNumberGeneratorConfiguration(sleepDirectionName,randomEngine.nextLong()),
+						new RandomNumberGeneratorConfiguration(disruptorName,randomEngine.nextLong())
+
 
 				};
 				StateMachineGroup theSmg=sms.getOrCreateStateMachineGroup(theSmgName, sms.getStateMachineGroupRoot());
@@ -507,9 +563,13 @@ public class DailyRhythm3 {
 					this.getLog().addVirtualSubject(vs);
 				}
 
+
+				@SuppressWarnings("unchecked")
+				Variable<Double> dayLength=(Variable<Double>) theSmg.getOrCreateVariable(Variable.Type.Object, "dayLength");
+				dayLength.add(Uniform.random(16.0, 18.0, randomEngine));
 				
 				Variable<Fatigue> fatigue=(Variable<Fatigue>) theSmg.getOrCreateVariable(Variable.Type.Object,"fatigue");
-				fatigue.add(new Fatigue(1.0));
+				fatigue.add(new Fatigue(1.0,dayLength.get(0)));
 
 				@SuppressWarnings("unchecked")
 				Variable<Duration> dayCycleRemainDuration=(Variable<Duration>) theSmg.getOrCreateVariable(Variable.Type.Object, "dayCycleRemainDuration");
@@ -519,11 +579,24 @@ public class DailyRhythm3 {
 					dayCycleRemainDuration.add(Duration.parse("PT0h"));
 					dayCycleTransferDuration.add(Duration.parse("PT0h"));
 				}
-				Variable<Double> dayLength=(Variable<Double>) theSmg.getOrCreateVariable(Variable.Type.Object, "dayLength");
-				dayLength.add(Uniform.random(16.0, 18.0, randomEngine));
+
+				
+				@SuppressWarnings("unchecked")
+				Variable<Instant> disruptionTime=(Variable<Instant>) theSmg.getOrCreateVariable(Variable.Type.Object, "disruptionTime");
+				double variation=Uniform.random(0, 7, randomEngine);
+				final String disruptionTimeSpec="P"+((int)14+(int)Math.floor(variation))+"DT"+(int)Math.floor((variation-Math.floor(variation))*24.0)+"H";
+				Duration duration=Duration.parse(disruptionTimeSpec);
+				Instant disruptionInstant=this.getInterval()[0].plus(duration);
+				disruptionTime.add(disruptionInstant);
+				
+				final Path pathToDisruptionTime=new Path();
+				pathToDisruptionTime.addPart(new Path.Part("..",0));
+				pathToDisruptionTime.addPart(new Path.Part("disruptionTime",0));
 
 
 				StateMachine sleepDirection=theSmg.getOrCreateStateMachine(sleepDirectionName,rncgArr[2].getSeed(),Priority.getPriority("low"));
+				
+				StateMachine disruptorStateMachine=theSmg.getOrCreateStateMachine(disruptorName, rncgArr[3].getSeed(), Priority.getPriority("low"));
 
 				this.setAdvanceTime(Duration.parse("PT1M"));
 				this.getLog().setTracer(new AppTracer(this.getLog(),theSmg));
@@ -675,15 +748,15 @@ public class DailyRhythm3 {
 						{"PT90M","PT110M"}, // stage 4
 						{"PT90M","PT110M"} // REM
 				};
-				HashMap<String,Double> sleepInterval=new HashMap<String,Double>();
-				//TODO
-				sleepInterval.put(sleepMode[0],dayLength.elementAt(0));
-				double remaining=24.0-sleepInterval.get(sleepMode[0]);
-				sleepInterval.put(sleepMode[2], remaining/2.0);
-				sleepInterval.put(sleepMode[5],remaining*0.2);
-				sleepInterval.put(sleepMode[1],remaining*0.1);
-				sleepInterval.put(sleepMode[3],remaining*0.1);
-				sleepInterval.put(sleepMode[4],remaining*0.1);
+//				HashMap<String,Double> sleepInterval=new HashMap<String,Double>();
+//				//TODO
+//				sleepInterval.put(sleepMode[0],dayLength.elementAt(0));
+//				double remaining=24.0-sleepInterval.get(sleepMode[0]);
+//				sleepInterval.put(sleepMode[2], remaining/2.0);
+//				sleepInterval.put(sleepMode[5],remaining*0.2);
+//				sleepInterval.put(sleepMode[1],remaining*0.1);
+//				sleepInterval.put(sleepMode[3],remaining*0.1);
+//				sleepInterval.put(sleepMode[4],remaining*0.1);
 				{
 					for ( int i=0; i<sleepMode.length; ++i) {
 						final String slmo=sleepMode[i];
@@ -902,6 +975,94 @@ public class DailyRhythm3 {
 				sleepDirection.setTracing(Trace.lvl1);
 
 
+				String disruptorStateName[]={"awaitingDisruption","disrupted"};
+				for (int i=0; i<disruptorStateName.length; ++i) {
+					final String dsn=disruptorStateName[i];
+					State state=disruptorStateMachine.getOrCreateState(dsn);
+				}
+				
+				final String[][][] disruptionBaseEdges={
+					{ // 0 - awaitingDisruption
+						{
+							disruptorStateName[0],disruptorStateName[0]
+						},
+						{
+							disruptorStateName[0],disruptorStateName[1]							
+						}
+						
+					},
+					{ // 1 - disrupted
+						{
+							disruptorStateName[1],disruptorStateName[1]							
+						}
+					}
+				};
+				
+				for (int i=0; i<disruptionBaseEdges.length; ++i) {
+					Condition[] sX_sY_Condition=new Condition[disruptionBaseEdges[i].length];
+					Action[] sX_sY_Action=new Action[disruptionBaseEdges[i].length];
+					TransitionRule[] sX_sY_TransitionRule=new TransitionRule[disruptionBaseEdges[i].length];
+					Edge[] sX_sY_Edge=new Edge[disruptionBaseEdges[i].length];
+					for (int j=0; j<disruptionBaseEdges[i].length;++j) {
+						final String edgeBaseName=disruptionBaseEdges[i][j][0]+"___"+disruptionBaseEdges[i][j][1];
+						String remainOrTransfer;
+						if (j==0) { // remain
+							remainOrTransfer="remain";
+							sX_sY_Condition[j]=new Condition(edgeBaseName+"___remainCondition",sms) {
+								@Override
+								public boolean evaluate(StateMachine sm) {
+
+
+									return true;
+								};
+							};
+							sX_sY_Action[j]=new Action(edgeBaseName+"___remainAction",sms) {
+								@Override
+								public boolean evaluate(StateMachine sm) {
+
+
+									return true;
+								};
+							
+							};
+
+						} else { // transfer
+							remainOrTransfer="transfer";
+							sX_sY_Condition[j]=new Condition(edgeBaseName+"___transferCondition",sms) {
+								@Override
+								public boolean evaluate(StateMachine sm) {
+									final Instant currentTime=this.getStateMachineSystem().getEngineData().getTime().getTime();
+									
+
+									return currentTime.compareTo(disruptionTime.get(0))>0;
+								};
+							};
+							sX_sY_Action[j]=new Action(edgeBaseName+"___transferAction",sms) {
+								@Override
+								public boolean evaluate(StateMachine sm) {
+									final Double dayLength=((Double)sm.getStateMachineGroup().getVariable("dayLength").elementAt(0));
+									final Fatigue fatigue=((Fatigue)sm.getStateMachineGroup().getVariable("fatigue").elementAt(0));
+									fatigue.setDayLength(dayLength);
+									return true;
+								};
+							
+							};
+							
+						}
+						sX_sY_TransitionRule[j]=disruptorStateMachine.getTransitionRule(edgeBaseName+"___"+remainOrTransfer+"TransitionRule",tick,sX_sY_Condition[j],sX_sY_Action[j]);
+						sX_sY_Edge[j]=disruptorStateMachine.getEdge(edgeBaseName+"___"+remainOrTransfer+"Edge", disruptorStateMachine.getOrCreateState(disruptionBaseEdges[i][j][0]), disruptorStateMachine.getOrCreateState(disruptionBaseEdges[i][j][1]), sX_sY_TransitionRule[j]);
+						this.getLog().addEventType(sX_sY_Edge[j].getEventName(), "disruption");
+					}
+					Vector<Edge> edgeVector=new Vector<Edge>();
+					edgeVector.addAll(Arrays.asList(sX_sY_Edge));
+					
+					Combination.Domain d=StateDomain.getDomain(disruptorStateMachine);
+					Vector<Combination.Domain> domainVector=new Vector<Combination.Domain>();
+					domainVector.add(d);
+					Combination.Type combinationType=new Combination.Type(domainVector);
+					disruptorStateMachine.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, disruptorStateMachine.getOrCreateState(disruptionBaseEdges[i][0][0]), sX_sY_Edge, new DisruptionProbabilityFunction()));
+					
+				}
 
 			}
 
