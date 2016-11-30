@@ -590,8 +590,8 @@ public class DailyRhythm3b {
 				Duration duration=Duration.parse(disruptionTimeSpec);
 				Instant disruptionInstant=this.getInterval()[0].plus(duration);
 				disruptionTime.add(disruptionInstant);
-				System.out.println(disruptionInstant);
-				System.exit(0);
+//				System.out.println(disruptionInstant);
+//				System.exit(0);
 				
 				final Path pathToDisruptionTime=new Path();
 				pathToDisruptionTime.addPart(new Path.Part("..",0));
