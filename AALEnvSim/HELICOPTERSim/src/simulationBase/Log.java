@@ -205,7 +205,9 @@ public class Log {
 				getRelatedDoubleData.setInt(1,resultSet.getInt(2));
 				final ResultSet rs=getRelatedDoubleData.executeQuery();
 				while (rs.next()) {
-					loggedEvent.put(rs.getString(1),rs.getDouble(2));
+					final String name=rs.getString(1);
+					final Double value=rs.getDouble(2);
+					loggedEvent.put(name,value);
 				}
 				rs.close();
 				this.fetched=true;

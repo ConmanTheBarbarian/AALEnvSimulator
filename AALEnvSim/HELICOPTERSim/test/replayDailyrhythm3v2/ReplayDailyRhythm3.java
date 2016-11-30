@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
@@ -48,7 +49,8 @@ public class ReplayDailyRhythm3 {
 	static int expirationWindowInMinutes=24*60*7; // a week
 	static int analysisWindowInMinutes=24*60; // 24 hours
 	static int analysisPeriodicityInMinutes=3*60; // 3 hours
-	static String[] virtualSubjects={"1-2","1-3","1-4","1-5"};
+	static String[] virtualSubjects={"1-7-2"};
+	static Map<String, String> env;
 
 
 	@BeforeClass
@@ -57,7 +59,10 @@ public class ReplayDailyRhythm3 {
 		multiDimensionalPointType=new MultiDimensionalPointType();
 		multiDimensionalPointType.addParameter(new Parameter("Timestamp",EuclidDate.class));
 		multiDimensionalPointType.addParameter(new Parameter("Occupancy",EuclidDouble.class));
-
+        env = System.getenv();
+        String value=env.get("virtualSubjects");
+        virtualSubjects=value.split("[;, \t]");
+        
 	}
 
 	@AfterClass
@@ -66,6 +71,7 @@ public class ReplayDailyRhythm3 {
 
 	@Before
 	public void setUp() throws Exception {
+ 
 	}
 
 	@After

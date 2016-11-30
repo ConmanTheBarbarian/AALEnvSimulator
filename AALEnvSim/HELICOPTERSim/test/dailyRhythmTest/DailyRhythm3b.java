@@ -89,12 +89,13 @@ public class DailyRhythm3b {
 			}
 			if (applicableEdgeSet.size()==2) {
 				for (Edge edge:applicableEdgeSet) {
-					if (edge.getEndState().getBaseName().contains("___transfer")) {
+					if (edge.getEndState().getBaseName().contains("disrupted")) {
 						result.put(edge, 0.01);
 					} else {
 						result.put(edge, 0.99);						
 					}
 				}
+				return result;
 			}
 			return null;
 		};
@@ -156,6 +157,7 @@ public class DailyRhythm3b {
 			}
 		}
 		public void setDayLength(double awakeDuration) {
+			sleepStageDecreaseMap.clear();
 			this.computeParameters(awakeDuration);
 			
 		}
@@ -522,7 +524,7 @@ public class DailyRhythm3b {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		final String[] virtualSubjects={"1-7-2"};
+		final String[] virtualSubjects={"1-1-2"};
 		//Mode.Type type=new Mode.Type("The type");
 		final String dayStateNames[]={"evening_night","night","night_morning","morning","morning_lunch","lunch","lunch_afternoon","afternoon","afternoon_evening","evening"};
 
@@ -588,6 +590,8 @@ public class DailyRhythm3b {
 				Duration duration=Duration.parse(disruptionTimeSpec);
 				Instant disruptionInstant=this.getInterval()[0].plus(duration);
 				disruptionTime.add(disruptionInstant);
+				System.out.println(disruptionInstant);
+				System.exit(0);
 				
 				final Path pathToDisruptionTime=new Path();
 				pathToDisruptionTime.addPart(new Path.Part("..",0));
@@ -1034,7 +1038,8 @@ public class DailyRhythm3b {
 									final Instant currentTime=this.getStateMachineSystem().getEngineData().getTime().getTime();
 									
 
-									return currentTime.compareTo(disruptionTime.get(0))>0;
+									boolean result= currentTime.compareTo(disruptionTime.get(0))>0;
+									return result;
 								};
 							};
 							sX_sY_Action[j]=new Action(edgeBaseName+"___transferAction",sms) {
@@ -1063,6 +1068,9 @@ public class DailyRhythm3b {
 					disruptorStateMachine.addStateEdgeProbabilitySpecification(new StateEdgeProbabilityFunctionSpecification(combinationType, disruptorStateMachine.getOrCreateState(disruptionBaseEdges[i][0][0]), sX_sY_Edge, new DisruptionProbabilityFunction()));
 					
 				}
+				disruptorStateMachine.setAllStatesAreDefined(true);
+				disruptorStateMachine.setStartState(disruptorStateMachine.getOrCreateState(disruptorStateName[0]));
+
 
 			}
 
