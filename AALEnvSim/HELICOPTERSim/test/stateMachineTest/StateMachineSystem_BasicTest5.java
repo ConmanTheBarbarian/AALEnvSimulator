@@ -13,9 +13,9 @@ import stateMachine.Action;
 import stateMachine.Condition;
 import stateMachine.Edge;
 import stateMachine.EngineData;
-import stateMachine.Event;
+import stateMachine.EventType;
 import stateMachine.Mode;
-import stateMachine.PrimitiveEvent;
+import stateMachine.PrimitiveEventType;
 import stateMachine.State;
 import stateMachine.StateMachine;
 import stateMachine.StateMachineSystem;
@@ -32,7 +32,7 @@ public class StateMachineSystem_BasicTest5 {
 		Configuration cfg=new Configuration(type);
 		EngineData engineData=new EngineData(cfg);
 		sms=StateMachineSystem.getStateMachineSystem("Allan",engineData);
-		PrimitiveEvent event=new PrimitiveEvent("Hello", sms);
+		PrimitiveEventType event=new PrimitiveEventType("Hello", sms);
 		Condition condition=new Condition("Hohoho", sms);
 		Action action=new Action("Hihihi", sms);
 		transitionRule=new TransitionRule("rule_1",sms, event,condition,action);
@@ -135,7 +135,7 @@ public class StateMachineSystem_BasicTest5 {
 			for (int i=0; i<start; ++i) {
 				String baseName=edgeNames[i][0]+"_"+edgeNames[i][1];
 
-				Event event=new PrimitiveEvent(baseName+"_event",sms);
+				EventType event=new PrimitiveEventType(baseName+"_event",sms);
 				
 				Condition condition=new Condition(baseName+"_condition",sms);
 				Action action=new Action(baseName+"_action",sms);

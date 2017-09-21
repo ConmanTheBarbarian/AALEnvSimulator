@@ -1,7 +1,7 @@
 package stateMachine;
 
 public class TransitionRule extends NamedObjectInStateMachine {
-	private Event event;
+	private EventType event;
 	private Condition condition;
 	private Action action;
 	
@@ -12,7 +12,7 @@ public class TransitionRule extends NamedObjectInStateMachine {
 	 * @param condition
 	 * @param action
 	 */
-	TransitionRule(String name, StateMachineSystem stateMachineSystem,StateMachine stateMachine, Event event, Condition condition,
+	TransitionRule(String name, StateMachineSystem stateMachineSystem,StateMachine stateMachine, EventType event, Condition condition,
 			Action action) {
 		super(name,stateMachineSystem,stateMachine);
 		if (!event.getStateMachineSystem().equals(stateMachineSystem)|| !condition.getStateMachineSystem().equals(stateMachineSystem)||!action.getStateMachineSystem().equals(stateMachineSystem)) {
@@ -29,7 +29,7 @@ public class TransitionRule extends NamedObjectInStateMachine {
 	/**
 	 * @return the event
 	 */
-	public synchronized final Event getEvent() {
+	public synchronized final EventType getEvent() {
 		return event;
 	}
 	/**

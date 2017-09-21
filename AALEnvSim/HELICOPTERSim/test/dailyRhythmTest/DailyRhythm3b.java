@@ -50,7 +50,7 @@ import stateMachine.EdgeProbabilityDouble;
 import stateMachine.EdgeProbabilityFunction;
 import stateMachine.EdgeProbabilityFunction.Function;
 import stateMachine.EdgeProbabilityModifierDouble;
-import stateMachine.Event;
+import stateMachine.EventType;
 import stateMachine.Mode;
 import stateMachine.ModeState;
 import stateMachine.Path;
@@ -538,7 +538,7 @@ public class DailyRhythm3b {
 			StateMachine sm;
 			StateMachine sleepStateMachine;
 			@Override
-			public void initialize(StateMachineSystem sms,Event tick) {
+			public void initialize(StateMachineSystem sms,EventType tick) {
 				
 				
 				String[] priorityNames={"high","medium","variableUpdate","low"};

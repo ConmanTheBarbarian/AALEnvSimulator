@@ -14,7 +14,7 @@ import stateMachine.Condition;
 import stateMachine.Edge;
 import stateMachine.EngineData;
 import stateMachine.Mode;
-import stateMachine.PrimitiveEvent;
+import stateMachine.PrimitiveEventType;
 import stateMachine.State;
 import stateMachine.StateMachine;
 import stateMachine.StateMachineSystem;
@@ -31,7 +31,7 @@ public class StateMachineSystem_BasicTest4 {
 		Configuration cfg=new Configuration(type);
 		EngineData engineData=new EngineData(cfg);
 		sms=StateMachineSystem.getStateMachineSystem("Allan",engineData);
-		PrimitiveEvent event=new PrimitiveEvent("Hello", sms);
+		PrimitiveEventType event=new PrimitiveEventType("Hello", sms);
 		Condition condition=new Condition("Hohoho", sms);
 		Action action=new Action("Hihihi", sms);
 		transitionRule=new TransitionRule("rule_1",sms, event,condition,action);

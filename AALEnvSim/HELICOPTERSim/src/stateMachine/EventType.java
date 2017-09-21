@@ -7,7 +7,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
-public class Event extends NamedObjectInStateMachineSystem implements Evaluation {
+public class EventType extends NamedObjectInStateMachineSystem implements Evaluation {
 	
 	public class StateMachineSubscription implements Comparable<StateMachineSubscription> {
 		private int count;
@@ -68,7 +68,7 @@ public class Event extends NamedObjectInStateMachineSystem implements Evaluation
 	 * @param sms
 	 * @param priority2 TODO
 	 */
-	public Event(String name, StateMachineSystem sms, Priority priority2) {
+	public EventType(String name, StateMachineSystem sms, Priority priority2) {
 		super(name, sms);
 		sms.addEvent(this);
 		this.priority=priority2;

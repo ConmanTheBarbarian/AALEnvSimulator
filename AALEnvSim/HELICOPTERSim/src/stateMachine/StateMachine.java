@@ -369,7 +369,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		}
 		return tr;
 	}
-	public TransitionRule getTransitionRule(final String name, Event event, Condition condition, Action action) {
+	public TransitionRule getTransitionRule(final String name, EventType event, Condition condition, Action action) {
 		TransitionRule tr=s2tr.get(name);
 		if (tr!=null) {
 			throw new IllegalStateException("Transition rule "+tr+" already exists");
@@ -580,7 +580,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	public synchronized final void setPriority(Priority priority) {
 		if (this.priority.compareTo(priority)!=0) {
 			for (TransitionRule tr:s2tr.values()) {
-				final Event event=tr.getEvent();
+				final EventType event=tr.getEvent();
 				event.unsubscribe(this);
 				event.subscribe(this,priority);
 			}

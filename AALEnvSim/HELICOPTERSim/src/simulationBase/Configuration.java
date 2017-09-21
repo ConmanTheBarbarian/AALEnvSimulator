@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
-import stateMachine.Event;
+import stateMachine.EventType;
 import stateMachine.Mode;
 import stateMachine.ModeState;
 import stateMachine.StateMachineSystem;
@@ -115,7 +115,7 @@ public class Configuration {
 		this.typeSet.add(type);
 	}
 	
-	public void initialize(StateMachineSystem sms,Event tick) {
+	public void initialize(StateMachineSystem sms,EventType tick) {
 		
 	}
 

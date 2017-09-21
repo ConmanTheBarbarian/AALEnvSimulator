@@ -12,7 +12,7 @@ import stateMachine.StateMachineGroup.StateMachineOrGroup;
 
 public class Variable<T> extends NamedObjectInStateMachineSystem {
 
-	private Event updateEvent;
+	private EventType updateEvent;
 	private Vector<T> vector=new Vector<T>();
 	private StateMachineGroup stateMachineGroup;
 	private Type type;
@@ -66,7 +66,7 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 		
 		}
 		final StateMachineSystem sms=smg.getStateMachineSystem();
-		v.updateEvent=PrimitiveEvent.getPrimitiveEvent(name+"_updateEvent",sms, Priority.getPriority("variableUpdate"));
+		v.updateEvent=PrimitiveEventType.getPrimitiveEvent(name+"_updateEvent",sms, Priority.getPriority("variableUpdate"));
 		v.type=type;
 		smg.addVariable(v);
 
@@ -378,7 +378,7 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 				+ ", updateEvent=" + updateEvent + "]";
 	}
 	
-	public synchronized Event getUpdateEvent() {
+	public synchronized EventType getUpdateEvent() {
 		return this.updateEvent;
 	}
 	

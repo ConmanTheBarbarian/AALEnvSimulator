@@ -12,7 +12,7 @@ import java.util.Set;
 
 import stateMachine.EngineData;
 import stateMachine.Mode;
-import stateMachine.PrimitiveEvent;
+import stateMachine.PrimitiveEventType;
 import stateMachine.StateMachineSystem;
 
 public class Engine extends Thread {

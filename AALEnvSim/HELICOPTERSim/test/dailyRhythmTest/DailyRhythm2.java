@@ -41,7 +41,7 @@ import stateMachine.EdgeProbabilityDouble;
 import stateMachine.EdgeProbabilityFunction;
 import stateMachine.EdgeProbabilityFunction.Function;
 import stateMachine.EdgeProbabilityModifierDouble;
-import stateMachine.Event;
+import stateMachine.EventType;
 import stateMachine.Mode;
 import stateMachine.ModeState;
 import stateMachine.State;
@@ -230,7 +230,7 @@ public class DailyRhythm2 {
 			StateMachine sm;
 			StateMachine sleepStateMachine;
 			@Override
-			public void initialize(StateMachineSystem sms,Event tick) {
+			public void initialize(StateMachineSystem sms,EventType tick) {
 				this.setAdvanceTime(Duration.parse("PT1M"));
 				this.getLog().setTracer(new AppTracer(this.getLog()));
 

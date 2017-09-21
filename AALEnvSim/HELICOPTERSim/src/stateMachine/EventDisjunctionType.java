@@ -4,16 +4,16 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.Stream;
 
-import stateMachine.Event.StateMachineSubscription;
+import stateMachine.EventType.StateMachineSubscription;
 
-public class EventDisjunction extends Event {
-	private HashSet<PrimitiveEvent> disjunction=new HashSet<PrimitiveEvent>();
+public class EventDisjunctionType extends EventType {
+	private HashSet<PrimitiveEventType> disjunction=new HashSet<PrimitiveEventType>();
 
 	/**
 	 * @param name
 	 * @param sms
 	 */
-	public EventDisjunction(String name, StateMachineSystem sms) {
+	public EventDisjunctionType(String name, StateMachineSystem sms) {
 		super(name, sms, null);
 	}
 	/**
@@ -21,7 +21,7 @@ public class EventDisjunction extends Event {
 	 * @return
 	 * @see java.util.HashSet#add(java.lang.Object)
 	 */
-	public  synchronized  boolean add(PrimitiveEvent e) {
+	public  synchronized  boolean add(PrimitiveEventType e) {
 		this.getSubscriberSet().parallelStream().forEach(smsu -> e.subscribe(smsu.getStateMachine(), null));
 		return disjunction.add(e);
 	}
@@ -31,15 +31,15 @@ public class EventDisjunction extends Event {
 	 * @see java.util.AbstractCollection#addAll(java.util.Collection)
 	 */
 	public  synchronized  boolean addAll(Collection<?> c) {
-		if (!c.parallelStream().allMatch(p->p instanceof PrimitiveEvent)) {
+		if (!c.parallelStream().allMatch(p->p instanceof PrimitiveEventType)) {
 			throw new IllegalArgumentException("Collection contains non-PrimitiveEvent objects");
 		}
 		this.getSubscriberSet().parallelStream().forEach(
 				smsu ->
-				c.parallelStream().forEach(pe-> ((Event) pe).subscribe(smsu.getStateMachine(), null)
+				c.parallelStream().forEach(pe-> ((EventType) pe).subscribe(smsu.getStateMachine(), null)
 				));
 
-		return disjunction.addAll((Collection<? extends PrimitiveEvent>) c);
+		return disjunction.addAll((Collection<? extends PrimitiveEventType>) c);
 	}
 	/**
 	 * 
@@ -48,7 +48,7 @@ public class EventDisjunction extends Event {
 	public  synchronized   void clear() {
 		this.getSubscriberSet().parallelStream().forEach(
 				smsu ->
-				disjunction.parallelStream().forEach(pe-> ((Event) pe).unsubscribe(smsu.getStateMachine())
+				disjunction.parallelStream().forEach(pe-> ((EventType) pe).unsubscribe(smsu.getStateMachine())
 				));
 		disjunction.clear();
 	}
@@ -66,7 +66,7 @@ public class EventDisjunction extends Event {
 	 * @see java.util.AbstractCollection#containsAll(java.util.Collection)
 	 */
 	public  synchronized  boolean containsAll(Collection<?> c) {
-		if (!c.parallelStream().allMatch(p->p instanceof PrimitiveEvent)) {
+		if (!c.parallelStream().allMatch(p->p instanceof PrimitiveEventType)) {
 			throw new IllegalArgumentException("Collection contains non-PrimitiveEvent objects");
 		}
 
@@ -84,7 +84,7 @@ public class EventDisjunction extends Event {
 	 * @return
 	 * @see java.util.HashSet#remove(java.lang.Object)
 	 */
-	public  synchronized  boolean remove(PrimitiveEvent o) {
+	public  synchronized  boolean remove(PrimitiveEventType o) {
 		this.getSubscriberSet().parallelStream().forEach(smsu -> o.unsubscribe(smsu.getStateMachine()));
 		return disjunction.remove(o);
 	}
@@ -94,12 +94,12 @@ public class EventDisjunction extends Event {
 	 * @see java.util.AbstractSet#removeAll(java.util.Collection)
 	 */
 	public  synchronized  boolean removeAll(Collection<?> c) {
-		if (!c.parallelStream().allMatch(p->p instanceof PrimitiveEvent)) {
+		if (!c.parallelStream().allMatch(p->p instanceof PrimitiveEventType)) {
 			throw new IllegalArgumentException("Collection contains non-PrimitiveEvent objects");
 		}
 		this.getSubscriberSet().parallelStream().forEach(
 				smsu ->
-				c.parallelStream().forEach(pe-> ((Event) pe).unsubscribe(smsu.getStateMachine())
+				c.parallelStream().forEach(pe-> ((EventType) pe).unsubscribe(smsu.getStateMachine())
 				));
 
 		return disjunction.removeAll(c);
@@ -127,7 +127,7 @@ public class EventDisjunction extends Event {
 		return disjunction.toArray(arg0);
 	}
 	
-	public synchronized Stream<PrimitiveEvent> parallelStreamOfPrimitiveEvents() {
+	public synchronized Stream<PrimitiveEventType> parallelStreamOfPrimitiveEvents() {
 		return disjunction.parallelStream();
 	}
 	@Override

@@ -26,7 +26,7 @@ import stateMachine.Action;
 import stateMachine.Condition;
 import stateMachine.Edge;
 import stateMachine.EdgeProbabilityDouble;
-import stateMachine.Event;
+import stateMachine.EventType;
 import stateMachine.Mode;
 import stateMachine.ModeState;
 import stateMachine.State;
@@ -61,7 +61,7 @@ public class DailyRhythm1 {
 		cfg=new Configuration(typeSet) {
 			StateMachine sm;
 			@Override
-			public void initialize(StateMachineSystem sms,Event tick) {
+			public void initialize(StateMachineSystem sms,EventType tick) {
 				final ModeState modeState=new ModeState(modeStateName,sms,type);
 				modeState.addValue(new Mode(type,"evening_night"));
 				sms.addModeState(modeState);
