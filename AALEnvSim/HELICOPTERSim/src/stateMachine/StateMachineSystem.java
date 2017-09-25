@@ -25,7 +25,7 @@ public class StateMachineSystem implements Evaluation {
 	private HashMap<String,Condition> conditionMap=new HashMap<String,Condition>();
 	private EngineData engineData;
 	private HashMap<String,EventType> eventMap=new HashMap<String,EventType>();
-	private PriorityQueue<EventType> eventQueue=new PriorityQueue<EventType>();
+	private PriorityQueue<EventOccurrence> eventQueue=new PriorityQueue<EventOccurrence>();
 	private MetaModeState metaMode;
 	private String name;
 	private HashMap<String,StateMachine> stateMachineMap=new HashMap<String,StateMachine>();
@@ -99,8 +99,8 @@ public class StateMachineSystem implements Evaluation {
 	@Override
 	public boolean evaluate() {
 		while(!eventQueue.isEmpty()) {
-			final EventType event=eventQueue.dequeue();
-			final Collection<StateMachineSubscription> smsuSet=event.getSubscriberSet();
+			final EventOccurrence event=eventQueue.dequeue();
+			final Collection<StateMachineSubscription> smsuSet=event.getEventType().getSubscriberSet();
 			for (StateMachineSubscription smsu:smsuSet) {
 				final StateMachine sm=smsu.getStateMachine();
 				sm.evaluate();
@@ -203,9 +203,9 @@ public class StateMachineSystem implements Evaluation {
 		stateMachineSystemMap.remove(this.getName());
 	}
 
-	public synchronized void signal(EventType updateEvent) {
+	public synchronized void signal(EventOccurrence updateEvent) {
 		if (!eventQueue.contains(updateEvent)) {
-			eventQueue.enqueue(updateEvent,updateEvent.getPriority());			
+			eventQueue.enqueue(updateEvent,updateEvent.getEventType().getPriority());			
 		}
 	}
 

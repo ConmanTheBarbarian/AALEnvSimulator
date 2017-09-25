@@ -1,5 +1,6 @@
 package stateMachine;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -137,6 +138,11 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 	}
 	public Priority getPriority() {
 		return priority;
+	}
+	
+	public EventOccurrence generateEventOccurrence(Timestamp timeOfOccurrence, boolean intentional) {
+		final EventOccurrence eventOccurrence=new EventOccurrence(this,timeOfOccurrence,intentional);
+		return eventOccurrence;
 	}
 	
 

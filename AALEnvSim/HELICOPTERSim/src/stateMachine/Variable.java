@@ -79,7 +79,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 */
 	public void add(int arg0, T arg1) {
 		vector.add(arg0, arg1);
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 	}
 	/**
 	 * @param arg0
@@ -87,7 +88,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#add(java.lang.Object)
 	 */
 	public boolean add(T arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.add(arg0);
 	}
 	/**
@@ -96,7 +98,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#addAll(java.util.Collection)
 	 */
 	public boolean addAll(Collection<? extends T> arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.addAll(arg0);
 	}
 	/**
@@ -106,7 +109,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#addAll(int, java.util.Collection)
 	 */
 	public boolean addAll(int arg0, Collection<? extends T> arg1) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.addAll(arg0, arg1);
 	}
 	/**
@@ -114,7 +118,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#addElement(java.lang.Object)
 	 */
 	public void addElement(T arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.addElement(arg0);
 	}
 	/**
@@ -129,7 +134,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#clear()
 	 */
 	public void clear() {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.clear();
 	}
 	/**
@@ -201,7 +207,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#insertElementAt(java.lang.Object, int)
 	 */
 	public void insertElementAt(T arg0, int arg1) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.insertElementAt(arg0, arg1);
 	}
 	/**
@@ -255,7 +262,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#remove(int)
 	 */
 	public T remove(int arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.remove(arg0);
 	}
 	/**
@@ -264,7 +272,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#remove(java.lang.Object)
 	 */
 	public boolean remove(Object arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.remove(arg0);
 	}
 	/**
@@ -273,7 +282,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#removeAll(java.util.Collection)
 	 */
 	public boolean removeAll(Collection<?> arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.removeAll(arg0);
 	}
 	/**
@@ -281,7 +291,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#removeAllElements()
 	 */
 	public void removeAllElements() {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.removeAllElements();
 	}
 	/**
@@ -290,7 +301,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#removeElement(java.lang.Object)
 	 */
 	public boolean removeElement(Object arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.removeElement(arg0);
 	}
 	/**
@@ -298,7 +310,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#removeElementAt(int)
 	 */
 	public void removeElementAt(int arg0) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.removeElementAt(arg0);
 	}
 	/**
@@ -308,7 +321,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#set(int, java.lang.Object)
 	 */
 	public T set(int arg0, T arg1) {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		return vector.set(arg0, arg1);
 	}
 	/**
@@ -317,8 +331,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#setElementAt(java.lang.Object, int)
 	 */
 	public void setElementAt(T arg0, int arg1) {	
-		getStateMachineSystem().signal(updateEvent);
-
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.setElementAt(arg0, arg1);
 	}
 	/**
@@ -326,8 +340,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#setSize(int)
 	 */
 	public void setSize(int arg0) {
-		getStateMachineSystem().signal(updateEvent);
-
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.setSize(arg0);
 	}
 	/**
@@ -366,7 +380,8 @@ public class Variable<T> extends NamedObjectInStateMachineSystem {
 	 * @see java.util.Vector#trimToSize()
 	 */
 	public void trimToSize() {
-		getStateMachineSystem().signal(updateEvent);
+		final StateMachineSystem sms=getStateMachineSystem();
+		sms.signal(updateEvent.generateEventOccurrence(sms.getEngineData().getTime().generateTimestamp(), false));
 		vector.trimToSize();
 	}
 	/* (non-Javadoc)
