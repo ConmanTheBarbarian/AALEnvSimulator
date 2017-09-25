@@ -26,12 +26,13 @@ public class StateMachineSystem implements Evaluation {
 	private EngineData engineData;
 	private HashMap<String,EventType> eventMap=new HashMap<String,EventType>();
 	private PriorityQueue<EventOccurrence> eventQueue=new PriorityQueue<EventOccurrence>();
+	private EventOccurrence lastTickOccurrence;
 	private MetaModeState metaMode;
 	private String name;
+	private HashMap<String,StateMachineGroup> s2smg=new HashMap<String,StateMachineGroup>();
 	private HashMap<String,StateMachine> stateMachineMap=new HashMap<String,StateMachine>();
 	private EventType tick=PrimitiveEventType.getPrimitiveEvent("tick",this, Priority.getPriorityWithIndex(0));
 	private HashMap<String,TransitionRule> transitionRuleMap=new HashMap<String,TransitionRule>();
-	private HashMap<String,StateMachineGroup> s2smg=new HashMap<String,StateMachineGroup>();
 	
 
 	
@@ -98,8 +99,8 @@ public class StateMachineSystem implements Evaluation {
 	
 	@Override
 	public boolean evaluate() {
-		while(!eventQueue.isEmpty()) {
-			final EventOccurrence event=eventQueue.dequeue();
+		while(!eventQueue.isEmptyUntil(this.lastTickOccurrence)) {
+			final EventOccurrence event=eventQueue.dequeueUntil(this.lastTickOccurrence);
 			final Collection<StateMachineSubscription> smsuSet=event.getEventType().getSubscriberSet();
 			for (StateMachineSubscription smsu:smsuSet) {
 				final StateMachine sm=smsu.getStateMachine();
@@ -110,42 +111,56 @@ public class StateMachineSystem implements Evaluation {
 	}
 	
 	@Override
+	public boolean evaluate(final EventOccurrence eventOccurrence) {
+		while(!eventQueue.isEmptyUntil(this.lastTickOccurrence)) {
+			final EventOccurrence event=eventQueue.dequeueUntil(eventOccurrence);
+			final Collection<StateMachineSubscription> smsuSet=event.getEventType().getSubscriberSet();
+			for (StateMachineSubscription smsu:smsuSet) {
+				final StateMachine sm=smsu.getStateMachine();
+				sm.evaluate(event);
+			}
+		}
+		return false;
+	}
+	@Override
 	public boolean evaluate(StateMachine sm) {
+		throw new IllegalArgumentException("State machine systems do not call evaluate with StateMachine as an argument");
+	}
+	
+	@Override
+	public boolean evaluate(StateMachine sm, EventOccurrence eventOccurrence) {
 		throw new IllegalArgumentException("State machine systems do not call evaluate with StateMachine as an argument");
 	}
 	public synchronized Action getAction(String name) {
 		return actionMap.get(name);
 	}
-	
 	public synchronized Condition getCondition(String name) {
 		return conditionMap.get(name);
 	}
+	
 	/**
 	 * @return the engineData
 	 */
 	public EngineData getEngineData() {
 		return engineData;
 	}
+
 	public EventType getEvent(String string) {
 		return eventMap.get(string);
 	}
-	
 	public MetaModeState getMetaModeState() {
 		return this.metaMode;
 	}
-
+	
 	public final String getName() {
 		return this.name;
 	}
-	/**
-	 * @param arg0
-	 * @return
-	 * @see java.util.HashMap#get(java.lang.Object)
-	 */
-	public StateMachine getStateMachine(String arg0) {
-		return stateMachineMap.get(arg0);
+	public StateMachineGroup getOrCreateStateMachineGroup(final String name,final StateMachineGroup parent) {
+		if (parent==null) {
+			throw new IllegalArgumentException("A state machine group needs a parent");
+		}
+		return getOrCreateStateMachineGroupBackend(name, parent);
 	}
-	
 	private StateMachineGroup getOrCreateStateMachineGroupBackend(final String name,final StateMachineGroup parent) {
 		StateMachineGroup smg=s2smg.get(name);
 		if (smg==null) {
@@ -154,18 +169,22 @@ public class StateMachineSystem implements Evaluation {
 		}
 		return smg;
 	}
-	public StateMachineGroup getOrCreateStateMachineGroup(final String name,final StateMachineGroup parent) {
-		if (parent==null) {
-			throw new IllegalArgumentException("A state machine group needs a parent");
-		}
-		return getOrCreateStateMachineGroupBackend(name, parent);
+
+
+
+
+	/**
+	 * @param arg0
+	 * @return
+	 * @see java.util.HashMap#get(java.lang.Object)
+	 */
+	public StateMachine getStateMachine(String arg0) {
+		return stateMachineMap.get(arg0);
 	}
+
 	public StateMachineGroup getStateMachineGroupRoot() {
 		return getOrCreateStateMachineGroupBackend("root",null);
 	}
-
-
-
 
 	/**
 	 * @return the tick
@@ -203,9 +222,9 @@ public class StateMachineSystem implements Evaluation {
 		stateMachineSystemMap.remove(this.getName());
 	}
 
-	public synchronized void signal(EventOccurrence updateEvent) {
-		if (!eventQueue.contains(updateEvent)) {
-			eventQueue.enqueue(updateEvent,updateEvent.getEventType().getPriority());			
+	public synchronized void signal(EventOccurrence event) {
+		if (!eventQueue.contains(event)) {
+			eventQueue.enqueue(event,event.getEventType().getPriority());	
 		}
 	}
 

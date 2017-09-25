@@ -18,7 +18,32 @@ public class Action extends NamedObjectInStateMachineSystem implements Evaluatio
 
 
 	@Override
+	public boolean evaluate() {
+		throw new IllegalArgumentException("Must use evaluate(StateMachine) on Action objects");
+	}
+
+
+
+
+	@Override
+	public boolean evaluate(EventOccurrence eventOccurrence) {
+		throw new IllegalArgumentException("Must use evaluate(StateMachine) on Action objects");
+
+	}
+
+
+
+
+	@Override
 	public boolean evaluate(final StateMachine sm) {
+		return false;
+	}
+
+
+
+
+	@Override
+	public boolean evaluate(StateMachine sm, EventOccurrence eventOccurrence) {
 		return false;
 	}
 
@@ -31,14 +56,6 @@ public class Action extends NamedObjectInStateMachineSystem implements Evaluatio
 	@Override
 	public String toString() {
 		return "Action [getName()=" + getName() + "]";
-	}
-
-
-
-
-	@Override
-	public boolean evaluate() {
-		throw new IllegalArgumentException("Must use evaluate(StateMachine) on Action objects");
 	}
 
 }

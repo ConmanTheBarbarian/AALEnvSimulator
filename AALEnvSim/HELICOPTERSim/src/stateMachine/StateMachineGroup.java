@@ -27,9 +27,19 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 			return false;
 		}
 		@Override
+		public boolean evaluate(EventOccurrence eventOccurrence) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		@Override
 		public boolean evaluate(StateMachine sm) {
 			throw new IllegalArgumentException("State machine groups do not call evaluate with StateMachine as an argument");
 
+		}
+		@Override
+		public boolean evaluate(StateMachine sm, EventOccurrence eventOccurrence) {
+			// TODO Auto-generated method stub
+			return false;
 		}
 		public final StateMachine getStateMachine() {
 			if (!this.isStateMachine()) {
@@ -98,13 +108,27 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 	}
 	@Override
 	public boolean evaluate() {
+		if (true) {
+			throw new IllegalArgumentException("Old evaluate");
+		}
 		for (StateMachineOrGroup smog:s2smosmg.values()) {
 			smog.evaluate();
 		}
 		return false;
 	}
 	@Override
+	public boolean evaluate(EventOccurrence eventOccurrence) {
+		for (StateMachineOrGroup smog:s2smosmg.values()) {
+			smog.evaluate(eventOccurrence);
+		}
+		return false;
+	}
+	@Override
 	public boolean evaluate(StateMachine sm) {
+		throw new IllegalArgumentException("State machine groups do not call evaluate with StateMachine as an argument");
+	}
+	@Override
+	public boolean evaluate(StateMachine sm, EventOccurrence eventOccurrence) {
 		throw new IllegalArgumentException("State machine groups do not call evaluate with StateMachine as an argument");
 	}
 	public final synchronized StateMachineOrGroup get(final String name) {
@@ -114,9 +138,27 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		}
 		return smog;
 	}
+
 	public final synchronized Collection<StateMachineOrGroup> getChildren() {
 		return this.s2smosmg.values();
 	}
+
+	/* (non-Javadoc)
+	 * @see stateMachine.NamedObjectInStateMachineSystem#getCurrentVirtualSubject()
+	 */
+	@Override
+	public synchronized String getCurrentVirtualSubject() {
+		final String currentVirtualSubject= super.getCurrentVirtualSubject();
+		if (currentVirtualSubject!=null) {
+			return currentVirtualSubject;
+		} 
+		if (this.parent!=null) {
+			return this.parent.getCurrentVirtualSubject();
+		}
+		return null;
+		
+	}
+	
 	/* (non-Javadoc)
 	 * @see stateMachine.NamedObjectInStateMachineSystem#getStateMachineBackEnd(stateMachine.NamedObjectInStateMachineSystem, java.lang.String[])
 	 */
@@ -159,7 +201,7 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		}
 		return nextNoism;
 	}
-
+	
 	public final synchronized StateMachine getOrCreateStateMachine(final String name, long seed, Priority priority) {
 		StateMachine sm=this.s2sm.get(name);
 		if (sm==null) {
@@ -178,7 +220,6 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		}
 		return v;
 	}
-	
 	@Override
 	public synchronized String getQualifiedName() {
 		String prefix;
@@ -189,14 +230,18 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		}
 		return prefix+this.getName();
 	}
-	
 	public synchronized Variable<?> getVariable(String name) {
 		return s2v.get(name);
 	}
 
+
+
 	public final boolean isRoot() {
 		return this.parent==null;
 	}
+
+
+
 	public final synchronized void remove(final StateMachine sm) {
 		StateMachineOrGroup smog=s2smosmg.get(sm.getName());
 		if (smog==null) {
@@ -205,30 +250,15 @@ public class StateMachineGroup extends NamedObjectInStateMachineSystem implement
 		s2smosmg.remove(sm.getName());
 		
 	}
+
+
+
 	public final synchronized void remove(final StateMachineGroup smg) {
 		StateMachineOrGroup smog=s2smosmg.get(smg.getName());
 		if (smog==null) {
 			throw new IllegalArgumentException("State machine group "+smg.getName()+" is not a member of the state machine group "+this.getName());
 		}
 		s2smosmg.remove(smg.getName());
-		
-	}
-
-
-
-	/* (non-Javadoc)
-	 * @see stateMachine.NamedObjectInStateMachineSystem#getCurrentVirtualSubject()
-	 */
-	@Override
-	public synchronized String getCurrentVirtualSubject() {
-		final String currentVirtualSubject= super.getCurrentVirtualSubject();
-		if (currentVirtualSubject!=null) {
-			return currentVirtualSubject;
-		} 
-		if (this.parent!=null) {
-			return this.parent.getCurrentVirtualSubject();
-		}
-		return null;
 		
 	}
 	

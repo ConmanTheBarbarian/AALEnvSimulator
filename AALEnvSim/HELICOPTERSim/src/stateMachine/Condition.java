@@ -128,7 +128,22 @@ public  class Condition extends NamedObjectInStateMachineSystem implements Evalu
 		sms.addCondition(this);
 	}
 
+	@Override
+	public boolean evaluate() {
+		throw new IllegalArgumentException("You must call evaluate(StateMachine) on Condition objects");
+	}
+
+	@Override
+	public boolean evaluate(EventOccurrence eventOccurrence) {
+		throw new IllegalArgumentException("You must call evaluate(StateMachine) on Condition objects");
+	}
+
 	public synchronized boolean evaluate(final StateMachine sm) {
+		return false;
+	}
+
+	@Override
+	public boolean evaluate(StateMachine sm, EventOccurrence eventOccurrence) {
 		return false;
 	}
 
@@ -138,11 +153,6 @@ public  class Condition extends NamedObjectInStateMachineSystem implements Evalu
 	@Override
 	public String toString() {
 		return "Condition [getName()=" + getName() + "]";
-	}
-
-	@Override
-	public boolean evaluate() {
-		throw new IllegalArgumentException("You must call evaluate(StateMachine) on Condition objects");
 	}
 
 

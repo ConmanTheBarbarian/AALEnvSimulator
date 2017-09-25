@@ -12,8 +12,8 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 	
 	public class StateMachineSubscription implements Comparable<StateMachineSubscription> {
 		private int count;
-		private StateMachine stateMachine;
 		private Priority priority;
+		private StateMachine stateMachine;
 		StateMachineSubscription(StateMachine stateMachine, Priority priority) {
 			this.stateMachine=stateMachine;
 			this.count=0;
@@ -31,6 +31,12 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		int getCount() {
 			return count;
 		}
+		/**
+		 * @return the priority
+		 */
+		public synchronized final Priority getPriority() {
+			return priority;
+		}
 		public final StateMachine getStateMachine() {
 			return stateMachine;
 		}
@@ -45,12 +51,6 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 			++this.count;			
 		}
 		/**
-		 * @return the priority
-		 */
-		public synchronized final Priority getPriority() {
-			return priority;
-		}
-		/**
 		 * @param priority the priority to set
 		 */
 		public synchronized final void setPriority(Priority priority) {
@@ -60,9 +60,9 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		
 	}
 
-	protected TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>> subscriberMap=new TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>>();
-	protected HashMap<StateMachine,Priority> sm2p=new HashMap<StateMachine,Priority>();
 	private Priority priority;
+	protected HashMap<StateMachine,Priority> sm2p=new HashMap<StateMachine,Priority>();
+	protected TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>> subscriberMap=new TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>>();
 
 	/**
 	 * @param name
@@ -75,8 +75,28 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		this.priority=priority2;
 	}
 	@Override
+	public boolean evaluate() {
+		throw new IllegalArgumentException("You must call evaluate(StateMachine) on Condition objects");
+	}
+	@Override
+	public boolean evaluate(EventOccurrence eventOccurrence) {
+		throw new IllegalArgumentException("You must call evaluate(StateMachine) on Condition objects");
+	}
+
+	@Override
 	public boolean evaluate(final StateMachine sm) {
 		return true;
+	}
+	@Override
+	public boolean evaluate(StateMachine sm, EventOccurrence eventOccurrence) {
+		return eventOccurrence.getEventType().equals(this);
+	}
+	public EventOccurrence generateEventOccurrence(Timestamp timeOfOccurrence, boolean intentional) {
+		final EventOccurrence eventOccurrence=new EventOccurrence(this,timeOfOccurrence,intentional);
+		return eventOccurrence;
+	}
+	public Priority getPriority() {
+		return priority;
 	}
 	synchronized final Collection<StateMachineSubscription> getSubscriberSet() {
 		Vector<StateMachineSubscription> result=new Vector<StateMachineSubscription>();
@@ -87,7 +107,7 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		}
 		return result;
 	}
-
+	
 	public synchronized  void subscribe(final StateMachine stateMachine, Priority priority) {
 		final Priority registeredPriority=sm2p.get(stateMachine);
 		if (registeredPriority!=null && registeredPriority.compareTo(priority)!=0) {
@@ -107,6 +127,13 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		}
 		smsu.increaseCount();
 	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Event [getName()=" + getName() + "]";
+	}
 	public synchronized  void unsubscribe(final StateMachine stateMachine) {
 		final Priority priority=sm2p.get(stateMachine);
 		if (priority==null) {
@@ -124,25 +151,6 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 				sm2p.remove(stateMachine);
 			}
 		}
-	}
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "Event [getName()=" + getName() + "]";
-	}
-	@Override
-	public boolean evaluate() {
-		throw new IllegalArgumentException("You must call evaluate(StateMachine) on Condition objects");
-	}
-	public Priority getPriority() {
-		return priority;
-	}
-	
-	public EventOccurrence generateEventOccurrence(Timestamp timeOfOccurrence, boolean intentional) {
-		final EventOccurrence eventOccurrence=new EventOccurrence(this,timeOfOccurrence,intentional);
-		return eventOccurrence;
 	}
 	
 

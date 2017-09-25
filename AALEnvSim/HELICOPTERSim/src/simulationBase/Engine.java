@@ -49,8 +49,8 @@ public class Engine extends Thread {
 		}
 		final Instant endOfInterval=this.data.getConfiguration().getInterval()[1];
 		while (this.data.getTime().getTime().isBefore(endOfInterval)) {
-			this.stateMachineSystem.signal(stateMachineSystem.getTick().generateEventOccurrence(this.stateMachineSystem.getEngineData().getTime().generateTimestamp(), false));
-			this.stateMachineSystem.evaluate();
+			//this.stateMachineSystem.signal(stateMachineSystem.getTick().generateEventOccurrence(this.stateMachineSystem.getEngineData().getTime().generateTimestamp(), false));
+			this.stateMachineSystem.evaluate(stateMachineSystem.getTick().generateEventOccurrence(this.stateMachineSystem.getEngineData().getTime().generateTimestamp(), false));
 			this.data.getTime().advanceTime();
 		}
 	}
