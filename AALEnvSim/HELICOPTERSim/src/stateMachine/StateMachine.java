@@ -210,7 +210,10 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 
 	@Override
 	public boolean evaluate(EventOccurrence eventOccurrence) {
-		// TODO Auto-generated method stub
+		
+		// if event is a declared future event, then check if the SM is in still in the appropriate state
+		// if it is, then transition + generate actual event occurrence stating that the transition took place
+		// if it is not, then ignore
 		return false;
 	}
 
@@ -221,8 +224,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 
 	@Override
 	public boolean evaluate(StateMachine sm, EventOccurrence eventOccurrence) {
-		// TODO Auto-generated method stub
-		return false;
+		throw new IllegalArgumentException("State machine do not call evaluate with StateMachine as an argument");
 	}
 
 	public State getCurrentState() {
@@ -279,7 +281,7 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		s2e.put(name, edge);
 		edgeSet.put(transitionRule,edge);
 
-		edge.getTransitionRule().getEvent().subscribe(this, this.getPriority());
+		edge.getTransitionRule().getEventType().subscribe(this, this.getPriority(), false);
 		return edge;
 	}
 
@@ -288,10 +290,10 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		final State startState=stateMap.get(startStateName);
 		final State endState=stateMap.get(endStateName);
 		if (startState==null) {
-			throw new IllegalArgumentException("There is not state "+startStateName);
+			throw new IllegalArgumentException("There is no state "+startStateName);
 		}
 		if (endState==null) {
-			throw new IllegalArgumentException("There is not state "+startStateName);
+			throw new IllegalArgumentException("There is no state "+startStateName);
 		}
 		return getEdge(name,startState,endState,transitionRule);
 	}
@@ -388,12 +390,12 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 		}
 		return tr;
 	}
-	public TransitionRule getTransitionRule(final String name, EventType event, Condition condition, Action action) {
+	public TransitionRule getTransitionRule(final String name, EventType event, Condition condition, Action action, boolean basedOnDeclaredAsFutureEvent) {
 		TransitionRule tr=s2tr.get(name);
 		if (tr!=null) {
 			throw new IllegalStateException("Transition rule "+tr+" already exists");
 		}
-		tr=new TransitionRule(name,getStateMachineSystem(),this,event,condition,action);
+		tr=new TransitionRule(name,getStateMachineSystem(),this,event,condition,action, basedOnDeclaredAsFutureEvent);
 		s2tr.put(name, tr);
 		return tr;
 
@@ -546,9 +548,9 @@ public class StateMachine extends NamedObjectInStateMachineSystem implements Eva
 	public synchronized final void setPriority(Priority priority) {
 		if (this.priority.compareTo(priority)!=0) {
 			for (TransitionRule tr:s2tr.values()) {
-				final EventType event=tr.getEvent();
+				final EventType event=tr.getEventType();
 				event.unsubscribe(this);
-				event.subscribe(this,priority);
+				event.subscribe(this,priority, false);
 			}
 			this.priority = priority;
 		}

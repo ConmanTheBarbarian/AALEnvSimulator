@@ -14,7 +14,8 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		private int count;
 		private Priority priority;
 		private StateMachine stateMachine;
-		StateMachineSubscription(StateMachine stateMachine, Priority priority) {
+		private boolean declaredAsFutureEvent;
+		StateMachineSubscription(StateMachine stateMachine, Priority priority, boolean declaredAsFutureEvent) {
 			this.stateMachine=stateMachine;
 			this.count=0;
 			this.priority=priority;
@@ -56,13 +57,20 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		public synchronized final void setPriority(Priority priority) {
 			this.priority = priority;
 		}
+		/**
+		 * @return the declaredAsFutureEvent
+		 */
+		public synchronized final boolean isDeclaredAsFutureEvent() {
+			return declaredAsFutureEvent;
+		}
+		
 		
 		
 	}
 
 	private Priority priority;
 	protected HashMap<StateMachine,Priority> sm2p=new HashMap<StateMachine,Priority>();
-	protected TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>> subscriberMap=new TreeMap<Priority,HashMap<StateMachine,StateMachineSubscription>>();
+	protected TreeMap<Priority,TreeMap<Boolean,HashMap<StateMachine,StateMachineSubscription>>> subscriberMap=new TreeMap<Priority,TreeMap<Boolean,HashMap<StateMachine,StateMachineSubscription>>>();
 
 	/**
 	 * @param name
@@ -101,27 +109,35 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 	synchronized final Collection<StateMachineSubscription> getSubscriberSet() {
 		Vector<StateMachineSubscription> result=new Vector<StateMachineSubscription>();
 		for (Priority p: subscriberMap.keySet()) {
-			for (StateMachineSubscription sms:subscriberMap.get(p).values()) {
-				result.add(sms);
+			for (int i=0; i<2; ++i) {
+				final boolean dafe=(i%2==0);
+				for (StateMachineSubscription sms:subscriberMap.get(p).get(dafe).values()) {
+					result.add(sms);
+				}
 			}
 		}
 		return result;
 	}
 	
-	public synchronized  void subscribe(final StateMachine stateMachine, Priority priority) {
+	public synchronized  void subscribe(final StateMachine stateMachine, Priority priority, boolean declaredAsFutureEvent) {
 		final Priority registeredPriority=sm2p.get(stateMachine);
 		if (registeredPriority!=null && registeredPriority.compareTo(priority)!=0) {
 			throw new IllegalArgumentException("State machine "+stateMachine.getName()+" is already assigned to event at a different priority");
 		}
+		TreeMap<Boolean,HashMap<StateMachine,StateMachineSubscription>> b2sm2sms=subscriberMap.get(priority);
+		if (b2sm2sms==null) {
+			b2sm2sms=new TreeMap<Boolean,HashMap<StateMachine,StateMachineSubscription>>();
+			subscriberMap.put(priority,b2sm2sms);
+		}
 		
-		HashMap<StateMachine,StateMachineSubscription> sm2sms=subscriberMap.get(priority);
+		HashMap<StateMachine,StateMachineSubscription> sm2sms=b2sm2sms.get(declaredAsFutureEvent);
 		if (sm2sms==null) {
 			sm2sms=new HashMap<StateMachine,StateMachineSubscription>();
-			subscriberMap.put(priority, sm2sms);
+			b2sm2sms.put(declaredAsFutureEvent, sm2sms);
 		}
 		StateMachineSubscription smsu=sm2sms.get(stateMachine);
 		if (smsu==null) {
-			smsu=new StateMachineSubscription(stateMachine, priority);
+			smsu=new StateMachineSubscription(stateMachine, priority, declaredAsFutureEvent);
 			sm2sms.put(stateMachine,smsu);
 			sm2p.put(stateMachine, priority);
 		}
@@ -139,16 +155,19 @@ public class EventType extends NamedObjectInStateMachineSystem implements Evalua
 		if (priority==null) {
 			throw new IllegalArgumentException("No such subscription for "+stateMachine);
 		}
-		HashMap<StateMachine,StateMachineSubscription> sm2sms=subscriberMap.get(priority);
-		if (sm2sms==null) {
-			throw new IllegalStateException("If priority exists, then there must be a subscription");
-		}
-		StateMachineSubscription smsu=sm2sms.get(stateMachine);
-		if (smsu!=null) {
-			smsu.decreaseCount();
-			if (smsu.getCount()==0) {
-				subscriberMap.remove(stateMachine);	
-				sm2p.remove(stateMachine);
+		TreeMap<Boolean,HashMap<StateMachine,StateMachineSubscription>> b2sm2sms=subscriberMap.get(priority);
+		for (boolean b:b2sm2sms.keySet()) {
+			HashMap<StateMachine,StateMachineSubscription> sm2sms=b2sm2sms.get(b);
+			if (sm2sms==null) {
+				throw new IllegalStateException("If priority exists, then there must be a subscription");
+			}
+			StateMachineSubscription smsu=sm2sms.get(stateMachine);
+			if (smsu!=null) {
+				smsu.decreaseCount();
+				if (smsu.getCount()==0) {
+					subscriberMap.remove(stateMachine);	
+					//sm2p.remove(stateMachine);
+				}
 			}
 		}
 	}
